@@ -7,6 +7,7 @@ Alex's Calendar-based Tarsnap Script
 Introduction
 ------------
 ACTS is a minimal shell script that creates backups with Tarsnap. Some points (and reasons) on the design:
+
 * Just backup, no restore.
 
 * Simplicity is a design goal.
