@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 
 # One archive is created per day. The archive type is yearly, monthly or
 # daily.
