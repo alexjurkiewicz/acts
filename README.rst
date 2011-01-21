@@ -8,13 +8,18 @@ Introduction
 ------------
 ACTS is a minimal shell script that creates backups with Tarsnap. Some points (and reasons) on the design:
 * Just backup, no restore.
+
 * Simplicity is a design goal.
+
 * Calendar-based backup schedule.
+
 * Inflexible backup schedule.
 
 The feature list:
 * Inflexible backup schedule (run daily)
+
 * Inflexible backup retention (keeps 30 daily backups, 12 monthly backups, all yearly backups)
+
 * Small code footprint
 
 Usage
