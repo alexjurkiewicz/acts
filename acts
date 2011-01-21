@@ -1,0 +1,127 @@
+#!/bin/bash
+set -x
+
+# One archive is created per day. The archive type is yearly, monthly or
+# daily.
+# If there is an outstanding yearly or monthly archive to be created they 
+# will be created in preference to the daily.
+
+# Archive name format: hostname-period-yyyy-mm-dd_HH:MM:SS-dir
+# 		   eg: appsrv05-yearly-2010-09-15_10:42:13-varwww
+
+
+# PART 1: Initialisation
+if [ -f acts.conf ] ; then
+	source acts.conf
+elif [ -f /etc/acts.conf ] ; then
+	source /etc/acts.conf
+else
+	echo "No acts.conf found in CWD or /etc/! Exiting."
+	exit 1
+fi
+
+export LANG=en_US.UTF-8
+archives=`mktemp` ; $tarsnap --list-archives > $archives
+
+# Define log options
+log_message() {
+	if [ "$verbose" -ge 0 ] ; then
+		echo "$@"
+	fi
+}
+log_verbose() {
+	if [ "$verbose" -ge 1 ] ; then
+		echo "$@"
+	fi
+}
+
+log_debug() {
+	if [ "$verbose" -ge 2 ] ; then
+		echo "$@"
+	fi
+}
+
+# When is now?
+today=$(date -u "+%Y-%m-%d_%H:%M:%S")
+# Instead of re-running date, be paranoid the day was microseconds away from ending
+year=$(echo $today | cut -d\_ -f1 | cut -d\- -f1)
+month=$(echo $today | cut -d\_ -f1 | cut -d\- -f2)
+day=$(echo $today | cut -d\_ -f1 | cut -d\- -f3)
+
+log_debug "It's $today"
+
+# Determine the archive type to create
+if egrep -q "^$hostname-yearly-$year" $archives ; then
+	if egrep -q "^$hostname-monthly-$year-$month" $archives ; then
+		# There's a yearly and monthly backup already
+		archivetype="daily"
+	else
+		# There was a yearly but no monthly backup
+		archivetype="monthly"
+	fi
+else
+	# There's no yearly backup
+	archivetype="yearly"
+fi
+log_verbose "Creating $archivetype backup"
+
+
+# PART 2: Do the backup
+
+# Run the pre-backup script
+if [ -n "$prebackupscript" ] ; then
+	if [ -x "$prebackupscript" ] ; then
+		$prebackupscript
+	else
+		log_message "prebackupscript ($prebackupscript) is not executable!"
+	fi
+fi
+# Do the backup proper
+backuprc=0 # Notice any failed backups
+for dir in $(echo $backuptargets | tr ' ' '\n') ; do
+	log_verbose "Backing up "$dir"..."
+	nicedirname=$(echo $dir | tr -d '/')
+	$tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / $dir || backuprc=$? # Since we mgiht run multiple tarsnaps, only overwrite backuprc if the exit code is != 0
+done
+# Update the archive listing
+$tarsnap --list-archives > $archives
+
+
+# PART 3: Trim Old Backups
+
+if [ "$backuprc" != "0" ] ; then
+	log_message "One of the backups failed -- not deleting old backups"
+	exit 1
+fi
+
+# We don't delete any yearly backups so ignore them
+
+# We keep 12 monthly backups
+monthlybackups=$(grep "$hostname-monthly-" $archives | sort -n | cut -d\_ -f1 | uniq)
+if [ $(echo "$monthlybackups" | wc -l) -gt 12 ] ; then
+	log_debug "More than 12 monthly backups, deleting the oldest"
+	echo "$monthlybackups" | head -n -12 | while read archiveprefixtodel ; do
+		log_verbose "Deleting monthly backup on $archiveprefixtodel"
+		egrep "\^$archiveprefixtodel" $archives | while read archivetodel ; do
+			log_debug "  - Deleting $archivetodel"
+			$tarsnap -d -f "$archivetodel"
+		done
+	done
+fi
+
+# We keep 30 daily backups
+dailybackups=$(grep "$hostname-daily-" $archives | sort -n | cut -d\_ -f1 | uniq)
+if [ $(echo "$dailybackups" | wc -l) -gt 30 ] ; then
+	log_debug "More than 30 daily backups, deleting the oldest"
+	echo "$dailybackups" | head -n -30 | while read archiveprefixtodel ; do
+		log_verbose "Deleting $archiveprefixtodel"
+		egrep "^$archiveprefixtodel" $archives | while read archivetodel ; do
+			log_debug "  - Deleting $archivetodel"
+			$tarsnap -d -f "$archivetodel"
+		done
+	done
+fi
+
+# All done
+rm $archives
+log_debug "Bye."
