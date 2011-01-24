@@ -11,7 +11,7 @@
 
 # PART 1: Initialisation
 if [ -f acts.conf ] ; then
-	. acts.conf
+	. ./acts.conf
 elif [ -f /etc/acts.conf ] ; then
 	. /etc/acts.conf
 else
