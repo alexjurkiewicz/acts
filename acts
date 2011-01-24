@@ -11,16 +11,16 @@
 
 # PART 1: Initialisation
 if [ -f acts.conf ] ; then
-	source acts.conf
+	. acts.conf
 elif [ -f /etc/acts.conf ] ; then
-	source /etc/acts.conf
+	. /etc/acts.conf
 else
 	echo "No acts.conf found in CWD or /etc/! Exiting."
 	exit 1
 fi
 
 export LANG=en_US.UTF-8
-archives=`mktemp` ; $tarsnap --list-archives > $archives
+archives=`mktemp` ; $tarsnap --list-archives | sort -n > $archives # Note, the sort command will sort periods into date order, eg backups of different periods will not be interleaved
 
 # Define log options
 log_message() {
@@ -96,11 +96,11 @@ fi
 # We don't delete any yearly backups so ignore them
 
 # We keep 12 monthly backups
-monthlybackups=`grep "$hostname-monthly-" $archives | sort -n | cut -d\_ -f1 | uniq`
+monthlybackups=`grep "$hostname-monthly-" $archives | cut -d\_ -f1 | uniq`
 if [ `echo "$monthlybackups" | wc -l` -gt 12 ] ; then
 	log_debug "More than 12 monthly backups, deleting the oldest"
 	echo "$monthlybackups" | head -n -12 | while read archiveprefixtodel ; do
-		log_verbose "Deleting monthly backup on $archiveprefixtodel"
+		log_verbose "Deleting monthly backups from $archiveprefixtodel"
 		egrep "\^$archiveprefixtodel" $archives | while read archivetodel ; do
 			log_debug "  - Deleting $archivetodel"
 			$tarsnap -d -f "$archivetodel"
@@ -109,11 +109,11 @@ if [ `echo "$monthlybackups" | wc -l` -gt 12 ] ; then
 fi
 
 # We keep 30 daily backups
-dailybackups=`grep "$hostname-daily-" $archives | sort -n | cut -d\_ -f1 | uniq`
+dailybackups=`grep "$hostname-daily-" $archives | cut -d\_ -f1 | uniq`
 if [ `echo "$dailybackups" | wc -l` -gt 30 ] ; then
 	log_debug "More than 30 daily backups, deleting the oldest"
 	echo "$dailybackups" | head -n -30 | while read archiveprefixtodel ; do
-		log_verbose "Deleting $archiveprefixtodel"
+		log_verbose "Deleting daily backups from $archiveprefixtodel"
 		egrep "^$archiveprefixtodel" $archives | while read archivetodel ; do
 			log_debug "  - Deleting $archivetodel"
 			$tarsnap -d -f "$archivetodel"
