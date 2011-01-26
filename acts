@@ -1,10 +1,5 @@
 #!/bin/sh
 
-# One archive is created per day. The archive type is yearly, monthly or
-# daily.
-# If there is an outstanding yearly or monthly archive to be created they 
-# will be created in preference to the daily.
-
 # Archive name format: hostname-period-yyyy-mm-dd_HH:MM:SS-dir
 # 		   eg: appsrv05-yearly-2010-09-15_10:42:13-varwww
 
