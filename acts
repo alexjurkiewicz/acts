@@ -1,8 +1,7 @@
 #!/bin/sh
 
-# Archive name format: hostname-period-yyyy-mm-dd_HH:MM:SS-dir
-# 		   eg: appsrv05-yearly-2010-09-15_10:42:13-varwww
-
+set -u # Exit if an uninitialised variable is read
+set -e # Exit if a pipeline exits non-zero
 
 # PART 1: Initialisation
 if [ -f acts.conf ] ; then
@@ -10,43 +9,52 @@ if [ -f acts.conf ] ; then
 elif [ -f /etc/acts.conf ] ; then
 	. /etc/acts.conf
 else
-	echo "No acts.conf found in CWD or /etc/! Exiting."
+	echo "No $(pwd)/acts.conf or /etc/acts.conf! Exiting."
 	exit 1
 fi
+# Use default values if anything is not set
+verbose="${verbose=0}"
+hostname="${hostname=$(hostname -s)}"
+backuptargets="${backuptargets=}"
+prebackupscript="${prebackupscript=}"
+tarsnap="${tarsnap:=tarsnap}"
+lockfile="${lockfile=/var/run/acts}"
+LANG="${LANG=en_US.UTF-8}" ; export LANG
 
-export LANG=en_US.UTF-8
-archives=`mktemp` ; $tarsnap --list-archives | sort -n > $archives # Note, the sort command will sort periods into date order, eg backups of different periods will not be interleaved
+log_message() { [ "$verbose" -ge 0 ] && echo "$@" || true ; } # FIXME: Need the "|| true" because of set -e. Is there a better workaround?
+log_verbose() { [ "$verbose" -ge 1 ] && echo "$@" || true ; }
+log_debug()   { [ "$verbose" -ge 2 ] && echo "$@" || true ; }
 
-# Define log options
-log_message() {
-	if [ "$verbose" -ge 0 ] ; then
-		echo "$@"
+# Create the lock. mkdir is atomic test/set, so use that instead of the typical test -f/touch combo
+if [ -d "$lockfile" ] ; then
+	log_message "$lockfile exists referencing PID $(cat "$lockfile/pid" 2>/dev/null || echo "<none>"), aborting!"
+	exit 1
+else
+	if output=$(mkdir "$lockfile" 2>&1) ; then
+		echo $$ > "$lockfile/pid"
+	else
+		echo "Can't create lock $lockfile: $output"
+		exit 1
 	fi
-}
-log_verbose() {
-	if [ "$verbose" -ge 1 ] ; then
-		echo "$@"
-	fi
-}
+fi
 
-log_debug() {
-	if [ "$verbose" -ge 2 ] ; then
-		echo "$@"
-	fi
-}
+trap "rm -f "$lockfile/pid"; rmdir "$lockfile" ; exit 1" INT TERM EXIT
+
+# PART 2: Preparation
+archives=$($tarsnap --list-archives | sort -n)
 
 # When is now?
-today=`date -u "+%Y-%m-%d_%H:%M:%S"`
+today=$(date -u "+%Y-%m-%d_%H:%M:%S")
 # Instead of re-running date, be paranoid the day was microseconds away from ending
-year=`echo $today | cut -d\_ -f1 | cut -d\- -f1`
-month=`echo $today | cut -d\_ -f1 | cut -d\- -f2`
-day=`echo $today | cut -d\_ -f1 | cut -d\- -f3`
+year=$(echo $today | cut -d\_ -f1 | cut -d\- -f1)
+month=$(echo $today | cut -d\_ -f1 | cut -d\- -f2)
+day=$(echo $today | cut -d\_ -f1 | cut -d\- -f3)
 
 log_debug "It's $today"
 
 # Determine the archive type to create
-if egrep -q "^$hostname-yearly-$year" $archives ; then
-	if egrep -q "^$hostname-monthly-$year-$month" $archives ; then
+if echo "$archives" | egrep -q "^$hostname-yearly-$year" ; then
+	if echo "$archives" | egrep -q "^$hostname-monthly-$year-$month" ; then
 		# There's a yearly and monthly backup already
 		archivetype="daily"
 	else
@@ -60,62 +68,67 @@ fi
 log_verbose "Creating $archivetype backup"
 
 
-# PART 2: Do the backup
-
 # Run the pre-backup script
 if [ -n "$prebackupscript" ] ; then
 	if [ -x "$prebackupscript" ] ; then
+		log_verbose "Running $prebackupscript..."
 		$prebackupscript
 	else
 		log_message "prebackupscript ($prebackupscript) is not executable!"
 	fi
 fi
-# Do the backup proper
+
+# PART 3: Backup
 backuprc=0 # Notice any failed backups
-for dir in `echo $backuptargets | tr ' ' '\n'` ; do
+for dir in $backuptargets ; do
 	log_verbose "Backing up "$dir"..."
-	nicedirname=`echo $dir | tr -d '/'`
-	$tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / $dir || backuprc=$? # Since we might run multiple tarsnaps, only overwrite backuprc if the exit code is != 0
+	nicedirname=$(echo $dir | tr -d '/')
+	output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / $dir 2>&1)"
+	if [ $? != 0 ] ; then
+		log_message "Failed to back up $dir! ($output)"
+		backuprc=1
+	fi
 done
 # Update the archive listing
-$tarsnap --list-archives > $archives
+archives=$($tarsnap --list-archives | sort -n)
 
 
-# PART 3: Trim Old Backups
+# PART 4: Trim old backups.
 
 if [ "$backuprc" != "0" ] ; then
 	log_message "One of the backups failed -- not deleting old backups"
 	exit 1
 fi
 
-# We don't delete any yearly backups so ignore them
+# We don't delete any yearly backups
 
 # We keep 12 monthly backups
-monthlybackups=`grep "$hostname-monthly-" $archives | cut -d\_ -f1 | uniq`
-if [ `echo "$monthlybackups" | wc -l` -gt 12 ] ; then
+monthlybackups=$(echo "$archives" | grep "$hostname-monthly-" | cut -d\_ -f1 | uniq)
+if [ $(echo "$monthlybackups" | wc -l) -gt 12 ] ; then
 	log_debug "More than 12 monthly backups, deleting the oldest"
 	echo "$monthlybackups" | head -n -12 | while read archiveprefixtodel ; do
 		log_verbose "Deleting monthly backups from $archiveprefixtodel"
-		egrep "\^$archiveprefixtodel" $archives | while read archivetodel ; do
+		echo "$archives" | egrep "\^$archiveprefixtodel" | while read archivetodel ; do
 			log_debug "  - Deleting $archivetodel"
 			$tarsnap -d -f "$archivetodel"
 		done
 	done
 fi
 
-# We keep 30 daily backups
-dailybackups=`grep "$hostname-daily-" $archives | cut -d\_ -f1 | uniq`
-if [ `echo "$dailybackups" | wc -l` -gt 30 ] ; then
+# We keep 31 daily backups
+dailybackups=$(echo "$archives" | grep "$hostname-daily-" | cut -d\_ -f1 | uniq)
+if [ $(echo "$dailybackups" | wc -l) -gt 31 ] ; then
 	log_debug "More than 30 daily backups, deleting the oldest"
-	echo "$dailybackups" | head -n -30 | while read archiveprefixtodel ; do
+	echo "$dailybackups" | head -n -31 | while read archiveprefixtodel ; do
 		log_verbose "Deleting daily backups from $archiveprefixtodel"
-		egrep "^$archiveprefixtodel" $archives | while read archivetodel ; do
+		echo "$archives" | egrep "^$archiveprefixtodel" | while read archivetodel ; do
 			log_debug "  - Deleting $archivetodel"
 			$tarsnap -d -f "$archivetodel"
 		done
 	done
 fi
 
-# All done
-rm $archives
 log_debug "Bye."
+trap - INT TERM EXIT
+rm -f "$lockfile/pid"; rmdir "$lockfile"
+exit 0
