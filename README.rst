@@ -16,20 +16,25 @@ Introduction
 
 Overview
 --------
-``acts`` is intended to be run daily from cron to backup directories your system. One Tarsnap archive is created per-directory per-run. 31 daily backups are kept, 12 monthy backups are kept, and yearly backups are kept indefinitely.
+``acts`` is intended to be run daily from cron to backup directories on your system. One Tarsnap archive is created per-directory per-run. 31 daily, 12 monthly, and indefinite yearly backups are kept.
 
 Usage
 -----
-1. Take 'acts.conf' and customise it for your environment. Put it in /etc.
+1. Take *acts.conf* and customise it for your environment. Put it in */etc*.
 2. Run ``acts`` daily from cron.
 
 Notes on behaviour:
 
-* ``acts`` creates archives of the form '<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-dir'. If you have any existing archives starting with 'hostname-daily/monthly/yearly)', they will confuse ``acts`` and it would be best if you delete or rename them.
+* ``acts`` creates archives of the form *<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-dir*. If you have any existing archives starting with *hostname-(daily|monthly|yearly)*, they will confuse ``acts``, so don't do that.
+
+* Archives are created using the following logic:
+  * If no yearly backup for the current year exists, create a yearly backup.
+  * If a yearly backup exists but no monthly backup, create a monthly backup.
+  * Otherwise, create a daily backup.
 
 * Archives are deleted using the following logic:
-  * Take the most recent 31 days a daily backup exists, and delete any older daily backups.
-  * Take the most recent 12 months a monthly backup exists, and delete any older monthly backups.
+  * Keep the most recent 31 daily backups, and delete any older ones.
+  * Keep the most recent 12 monthly backups, and delete any older ones.
   * Do not delete any yearly backups.
 
 * Dates in archive names are given in UTC time, not server local time.
@@ -38,11 +43,11 @@ Notes on behaviour:
 
 TODO
 ----
-* Add per-directory excludes handling. For now, add global excludes in your tarsnap.conf/tarsnaprc file.
+* Add per-directory excludes handling. (For now, add global excludes in your *tarsnap.conf*/*.tarsnaprc* file.)
 
-* Add some backup period configurability.
+* Add some backup period configurability. (For now, you can edit the hardcoded values in the script for some configurability.)
 
 Help
 ----
-Email me (alex@bluebottle.net.au), or IRC me (checkers in #tarsnap).
+Email me (alex@jurkiewi.cz), or IRC me (checkers in #tarsnap).
 
