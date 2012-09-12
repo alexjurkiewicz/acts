@@ -28,14 +28,14 @@ Notes on behaviour:
 * ``acts`` creates archives of the form *<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-dir*. If you have any existing archives starting with *hostname-(daily|monthly|yearly)*, they will confuse ``acts``, so don't do that.
 
 * Archives are created using the following logic:
-  * If no yearly backup for the current year exists, create a yearly backup.
-  * If a yearly backup exists but no monthly backup, create a monthly backup.
-  * Otherwise, create a daily backup.
+    * If no yearly backup for the current year exists, create a yearly backup.
+    * If a yearly backup exists but no monthly backup, create a monthly backup.
+    * Otherwise, create a daily backup.
 
 * Archives are deleted using the following logic:
-  * Keep the most recent 31 daily backups, and delete any older ones.
-  * Keep the most recent 12 monthly backups, and delete any older ones.
-  * Do not delete any yearly backups.
+    * Keep the most recent 31 daily backups, and delete any older ones.
+    * Keep the most recent 12 monthly backups, and delete any older ones.
+    * Do not delete any yearly backups.
 
 * Dates in archive names are given in UTC time, not server local time.
 
