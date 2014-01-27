@@ -17,6 +17,7 @@ verbose="${verbose=0}"
 hostname="${hostname=$(hostname -s)}"
 backuptargets="${backuptargets=}"
 prebackupscript="${prebackupscript=}"
+postbackupscript="${postbackupscript=}"
 tarsnap="${tarsnap:=tarsnap}"
 lockfile="${lockfile=/var/run/acts}"
 LANG="${LANG=en_US.UTF-8}" ; export LANG
@@ -126,6 +127,16 @@ if [ $(echo "$dailybackups" | wc -l) -gt 31 ] ; then
 			$tarsnap -d -f "$archivetodel"
 		done
 	done
+fi
+
+# Run the post-backup script
+if [ -n "$postbackupscript" ] ; then
+        if [ -x "$postbackupscript" ] ; then
+                log_verbose "Running $postbackupscript..."
+                $postbackupscript
+        else
+                log_message "postbackupscript ($postbackupscript) is not executable!"
+        fi
 fi
 
 log_debug "Bye."
