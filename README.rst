@@ -49,5 +49,5 @@ TODO
 
 Help
 ----
-Email me (alex@jurkiewi.cz), or IRC me (checkers in #tarsnap).
+Email me (alex@jurkiewi.cz) or open a Github issue.
 
