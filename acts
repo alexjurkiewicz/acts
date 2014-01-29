@@ -109,7 +109,7 @@ if [ $(echo "$monthlybackups" | wc -l) -gt 12 ] ; then
 	log_debug "More than 12 monthly backups, deleting the oldest"
 	echo "$monthlybackups" | head -n -12 | while read archiveprefixtodel ; do
 		log_verbose "Deleting monthly backups from $archiveprefixtodel"
-		echo "$archives" | egrep "\^$archiveprefixtodel" | while read archivetodel ; do
+		echo "$archives" | egrep "^$archiveprefixtodel" | while read archivetodel ; do
 			log_debug "  - Deleting $archivetodel"
 			$tarsnap -d -f "$archivetodel"
 		done
