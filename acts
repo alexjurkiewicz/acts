@@ -49,7 +49,7 @@ today=$(date -u "+%Y-%m-%d_%H:%M:%S")
 # Instead of re-running date, be paranoid the day was microseconds away from ending
 year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
 month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
-day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3)
+# day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
 
 log_debug "It's $today"
 
