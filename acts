@@ -39,7 +39,7 @@ else
 	fi
 fi
 
-trap "rm -f "$lockfile/pid"; rmdir "$lockfile" ; exit 1" INT TERM EXIT
+trap "rm -f \"$lockfile/pid\"; rmdir \"$lockfile\" ; exit 1" INT TERM EXIT
 
 # PART 2: Preparation
 archives=$($tarsnap --list-archives | sort -n)
@@ -47,9 +47,9 @@ archives=$($tarsnap --list-archives | sort -n)
 # When is now?
 today=$(date -u "+%Y-%m-%d_%H:%M:%S")
 # Instead of re-running date, be paranoid the day was microseconds away from ending
-year=$(echo $today | cut -d\_ -f1 | cut -d\- -f1)
-month=$(echo $today | cut -d\_ -f1 | cut -d\- -f2)
-day=$(echo $today | cut -d\_ -f1 | cut -d\- -f3)
+year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
+month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
+day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3)
 
 log_debug "It's $today"
 
@@ -82,11 +82,11 @@ fi
 # PART 3: Backup
 backuprc=0 # Notice any failed backups
 for dir in $backuptargets ; do
-	log_verbose "Backing up "$dir"..."
-	nicedirname=$(echo $dir | tr -d '/')
-	output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / $dir 2>&1)"
+	log_verbose "Backing up \"$dir\"..."
+	nicedirname=$(echo "$dir" | tr -d '/')
+	output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / "$dir" 2>&1)"
 	if [ $? != 0 ] ; then
-		log_message "Failed to back up $dir! ($output)"
+		log_message "Failed to back up \"$dir\"! ($output)"
 		backuprc=1
 	fi
 done
@@ -104,8 +104,8 @@ fi
 # We don't delete any yearly backups
 
 # We keep 12 monthly backups
-monthlybackups=$(echo "$archives" | grep "$hostname-monthly-" | cut -d\_ -f1 | uniq)
-if [ $(echo "$monthlybackups" | wc -l) -gt 12 ] ; then
+monthlybackups=$(echo "$archives" | grep "$hostname-monthly-" | cut -d_ -f1 | uniq)
+if [ "$(echo "$monthlybackups" | wc -l)" -gt 12 ] ; then
 	log_debug "More than 12 monthly backups, deleting the oldest"
 	echo "$monthlybackups" | head -n -12 | while read archiveprefixtodel ; do
 		log_verbose "Deleting monthly backups from $archiveprefixtodel"
@@ -117,8 +117,8 @@ if [ $(echo "$monthlybackups" | wc -l) -gt 12 ] ; then
 fi
 
 # We keep 31 daily backups
-dailybackups=$(echo "$archives" | grep "$hostname-daily-" | cut -d\_ -f1 | uniq)
-if [ $(echo "$dailybackups" | wc -l) -gt 31 ] ; then
+dailybackups=$(echo "$archives" | grep "$hostname-daily-" | cut -d_ -f1 | uniq)
+if [ "$(echo "$dailybackups" | wc -l)" -gt 31 ] ; then
 	log_debug "More than 30 daily backups, deleting the oldest"
 	echo "$dailybackups" | head -n -31 | while read archiveprefixtodel ; do
 		log_verbose "Deleting daily backups from $archiveprefixtodel"
