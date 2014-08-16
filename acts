@@ -33,6 +33,12 @@ tarsnap="${tarsnap:=tarsnap}"
 lockfile="${lockfile=/var/run/acts}"
 LANG="${LANG=en_US.UTF-8}" ; export LANG
 
+# Parameter validation
+if [ -z "$backuptargets" ] ; then
+    log_message "\$backuptargets is not set in acts.conf, exiting."
+    exit 1
+fi
+
 # Create the lock. mkdir is atomic test/set, so use that instead of the typical test -f/touch combo
 if [ -d "$lockfile" ] ; then
     log_message "$lockfile exists referencing PID $(cat "$lockfile/pid" 2>/dev/null || echo "<none>")."
