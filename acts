@@ -152,7 +152,6 @@ if [ -n "$postbackupscript" ] ; then
         fi
 fi
 
-log_debug "Bye."
 trap - INT TERM EXIT
 rm -f "$lockfile/pid"; rmdir "$lockfile"
 
