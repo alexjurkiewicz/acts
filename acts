@@ -57,7 +57,7 @@ if ! archives_unsorted=$($tarsnap --list-archives) ; then
     log_message "Hint: is Tarsnap configured correctly?"
     exit 1
 fi
-archives=$(echo "$achives_unsorted" | sort -n)
+archives=$(echo "$archives_unsorted" | sort -n)
 
 # When is now?
 today=$(date -u "+%Y-%m-%d_%H:%M:%S")
