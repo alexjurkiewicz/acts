@@ -3,11 +3,18 @@
 set -u # Exit if an uninitialised variable is read
 set -e # Exit if a pipeline exits non-zero
 
+verbose=0 # set this so we can define the log_functions early
+log_message() { [ "$verbose" -ge 0 ] && echo "$@" >&2 || true ; } # FIXME: Need the "|| true" because of set -e. Is there a better workaround?
+log_verbose() { [ "$verbose" -ge 1 ] && echo "$@" >&2 || true ; }
+log_debug()   { [ "$verbose" -ge 2 ] && echo "$@" >&2 || true ; }
+
 # PART 1: Initialisation
 if [ -f acts.conf ] ; then
-	. ./acts.conf
+    . ./acts.conf
+    log_debug "Loaded $(pwd)/acts.conf"
 elif [ -f /etc/acts.conf ] ; then
-	. /etc/acts.conf
+    . /etc/acts.conf
+    log_debug "Loaded /etc/acts.conf"
 else
 	echo "No $(pwd)/acts.conf or /etc/acts.conf! Exiting."
 	exit 1
@@ -21,10 +28,6 @@ postbackupscript="${postbackupscript=}"
 tarsnap="${tarsnap:=tarsnap}"
 lockfile="${lockfile=/var/run/acts}"
 LANG="${LANG=en_US.UTF-8}" ; export LANG
-
-log_message() { [ "$verbose" -ge 0 ] && echo "$@" || true ; } # FIXME: Need the "|| true" because of set -e. Is there a better workaround?
-log_verbose() { [ "$verbose" -ge 1 ] && echo "$@" || true ; }
-log_debug()   { [ "$verbose" -ge 2 ] && echo "$@" || true ; }
 
 # Create the lock. mkdir is atomic test/set, so use that instead of the typical test -f/touch combo
 if [ -d "$lockfile" ] ; then
