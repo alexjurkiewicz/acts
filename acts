@@ -48,7 +48,11 @@ trap "trap - INT TERM EXIT ; echo Exiting unexpectedly. >&2 ; rm -f \"$lockfile/
 
 # PART 2: Preparation
 log_debug "Listing tarsnap archives"
-archives=$($tarsnap --list-archives | sort -n)
+if ! archives_unsorted=$($tarsnap --list-archives) ; then
+    log_message "Couldn't get list of existing archives, exiting."
+    exit 1
+fi
+archives=$(echo "$achives_unsorted" | sort -n)
 
 # When is now?
 today=$(date -u "+%Y-%m-%d_%H:%M:%S")
