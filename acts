@@ -16,8 +16,8 @@ elif [ -f /etc/acts.conf ] ; then
     . /etc/acts.conf
     log_debug "Loaded /etc/acts.conf"
 else
-	echo "No $(pwd)/acts.conf or /etc/acts.conf! Exiting."
-	exit 1
+    log_message "No $(pwd)/acts.conf or /etc/acts.conf! Exiting."
+    exit 1
 fi
 # Use default values if anything is not set
 verbose="${verbose=0}"
@@ -31,20 +31,23 @@ LANG="${LANG=en_US.UTF-8}" ; export LANG
 
 # Create the lock. mkdir is atomic test/set, so use that instead of the typical test -f/touch combo
 if [ -d "$lockfile" ] ; then
-	log_message "$lockfile exists referencing PID $(cat "$lockfile/pid" 2>/dev/null || echo "<none>"), aborting!"
-	exit 1
+    log_message "$lockfile exists referencing PID $(cat "$lockfile/pid" 2>/dev/null || echo "<none>")."
+    log_message "Hint: If acts is not already running, rm -rf $lockfile"
+    exit 1
 else
-	if output=$(mkdir "$lockfile" 2>&1) ; then
-		echo $$ > "$lockfile/pid"
-	else
-		echo "Can't create lock $lockfile: $output"
-		exit 1
-	fi
+    if output=$(mkdir "$lockfile" 2>&1) ; then
+        echo $$ > "$lockfile/pid"
+        log_debug "Created $lockfile/ with 'pid' referencing $$"
+    else
+        log_message "Can't create lock $lockfile: $output"
+        exit 1
+    fi
 fi
 
-trap "rm -f \"$lockfile/pid\"; rmdir \"$lockfile\" ; exit 1" INT TERM EXIT
+trap "trap - INT TERM EXIT ; echo Exiting unexpectedly. >&2 ; rm -f \"$lockfile/pid\"; rmdir \"$lockfile\" ; exit 1" INT TERM EXIT
 
 # PART 2: Preparation
+log_debug "Listing tarsnap archives"
 archives=$($tarsnap --list-archives | sort -n)
 
 # When is now?
@@ -53,45 +56,44 @@ today=$(date -u "+%Y-%m-%d_%H:%M:%S")
 year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
 month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
 # day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
-
 log_debug "It's $today"
 
 # Determine the archive type to create
 if echo "$archives" | egrep -q "^$hostname-yearly-$year" ; then
-	if echo "$archives" | egrep -q "^$hostname-monthly-$year-$month" ; then
-		# There's a yearly and monthly backup already
-		archivetype="daily"
-	else
-		# There was a yearly but no monthly backup
-		archivetype="monthly"
-	fi
+    if echo "$archives" | egrep -q "^$hostname-monthly-$year-$month" ; then
+        # There's a yearly and monthly backup already
+        archivetype="daily"
+    else
+        # There was a yearly but no monthly backup
+        archivetype="monthly"
+    fi
 else
-	# There's no yearly backup
-	archivetype="yearly"
+    # There's no yearly backup
+    archivetype="yearly"
 fi
 log_verbose "Creating $archivetype backup"
 
 
 # Run the pre-backup script
 if [ -n "$prebackupscript" ] ; then
-	if [ -x "$prebackupscript" ] ; then
-		log_verbose "Running $prebackupscript..."
-		$prebackupscript
-	else
-		log_message "prebackupscript ($prebackupscript) is not executable!"
-	fi
+    if [ -x "$prebackupscript" ] ; then
+        log_verbose "Running $prebackupscript..."
+        $prebackupscript
+    else
+        log_message "prebackupscript ($prebackupscript) is not executable!"
+    fi
 fi
 
 # PART 3: Backup
 backuprc=0 # Notice any failed backups
 for dir in $backuptargets ; do
-	log_verbose "Backing up \"$dir\"..."
-	nicedirname=$(echo "$dir" | tr -d '/')
-	output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / "$dir" 2>&1)"
-	if [ $? != 0 ] ; then
-		log_message "Failed to back up \"$dir\"! ($output)"
-		backuprc=1
-	fi
+    log_verbose "Backing up $dir..."
+    nicedirname=$(echo "$dir" | tr -d '/')
+    output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / "$dir" 2>&1)"
+    if [ $? != 0 ] ; then
+        log_message "Failed to back up \"$dir\"! ($output)"
+        backuprc=1
+    fi
 done
 # Update the archive listing
 archives=$($tarsnap --list-archives | sort -n)
