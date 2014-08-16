@@ -1,6 +1,6 @@
-====
-ACTS
-====
+========
+ACTS 0.9
+========
 Another Calendar-based Tarsnap Script, or
 Alex's Crappy Tarsnap Script
 
