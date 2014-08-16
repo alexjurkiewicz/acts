@@ -5,6 +5,8 @@ set -u
 # Exit if a pipeline exits non-zero
 set -e
 
+starttime=$(date +%s)
+
 verbose=0 # set this so we can define the log_functions early
 log_message() { [ "$verbose" -ge 0 ] && echo "$@" >&2 || true ; } # FIXME: Need the "|| true" because of set -e. Is there a better workaround?
 log_verbose() { [ "$verbose" -ge 1 ] && echo "$@" >&2 || true ; }
@@ -153,4 +155,7 @@ fi
 log_debug "Bye."
 trap - INT TERM EXIT
 rm -f "$lockfile/pid"; rmdir "$lockfile"
+
+endtime=$(date +%s)
+log_verbose "acts run took $((endtime - starttime)) seconds"
 exit 0
