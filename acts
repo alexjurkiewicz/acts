@@ -94,8 +94,7 @@ backuprc=0 # Notice any failed backups
 for dir in $backuptargets ; do
     log_verbose "Backing up $dir..."
     nicedirname=$(echo "$dir" | tr -d '/')
-    output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / "$dir" 2>&1)"
-    if [ $? != 0 ] ; then
+    if ! output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / "$dir" 2>&1)" ; then
         log_message "Failed to back up \"$dir\"! ($output)"
         backuprc=1
     fi
