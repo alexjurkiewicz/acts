@@ -102,36 +102,36 @@ archives=$($tarsnap --list-archives | sort -n)
 # PART 4: Trim old backups.
 
 if [ "$backuprc" != "0" ] ; then
-	log_message "One of the backups failed -- not deleting old backups"
-	exit 1
+    log_message "One of the backups failed -- not deleting old backups"
+    exit 1
 fi
 
 # We don't delete any yearly backups
 
 # We keep 12 monthly backups
-monthlybackups=$(echo "$archives" | grep "$hostname-monthly-" | cut -d_ -f1 | uniq)
+monthlybackups=$(echo "$archives" | grep "$hostname-monthly-" | cut -d_ -f1 | uniq | sort -rn)
 if [ "$(echo "$monthlybackups" | wc -l)" -gt 12 ] ; then
-	log_debug "More than 12 monthly backups, deleting the oldest"
-	echo "$monthlybackups" | head -n -12 | while read archiveprefixtodel ; do
-		log_verbose "Deleting monthly backups from $archiveprefixtodel"
-		echo "$archives" | egrep "^$archiveprefixtodel" | while read archivetodel ; do
-			log_debug "  - Deleting $archivetodel"
-			$tarsnap -d -f "$archivetodel"
-		done
-	done
+    log_debug "More than 12 monthly backups, deleting the oldest"
+    echo "$monthlybackups" | tail -n +13 | while read archiveprefixtodel ; do
+        log_verbose "Deleting monthly backups from $archiveprefixtodel"
+        echo "$archives" | egrep "^$archiveprefixtodel" | while read archivetodel ; do
+            log_debug "  - Deleting $archivetodel"
+            $tarsnap -d -f "$archivetodel"
+        done
+    done
 fi
 
 # We keep 31 daily backups
-dailybackups=$(echo "$archives" | grep "$hostname-daily-" | cut -d_ -f1 | uniq)
+dailybackups=$(echo "$archives" | grep "$hostname-daily-" | cut -d_ -f1 | uniq | sort -rn)
 if [ "$(echo "$dailybackups" | wc -l)" -gt 31 ] ; then
-	log_debug "More than 30 daily backups, deleting the oldest"
-	echo "$dailybackups" | head -n -31 | while read archiveprefixtodel ; do
-		log_verbose "Deleting daily backups from $archiveprefixtodel"
-		echo "$archives" | egrep "^$archiveprefixtodel" | while read archivetodel ; do
-			log_debug "  - Deleting $archivetodel"
-			$tarsnap -d -f "$archivetodel"
-		done
-	done
+    log_debug "More than 30 daily backups, deleting the oldest"
+    echo "$dailybackups" | tail -n +32 | while read archiveprefixtodel ; do
+        log_verbose "Deleting daily backups from $archiveprefixtodel"
+        echo "$archives" | egrep "^$archiveprefixtodel" | while read archivetodel ; do
+            log_debug "  - Deleting $archivetodel"
+            $tarsnap -d -f "$archivetodel"
+        done
+    done
 fi
 
 # Run the post-backup script
