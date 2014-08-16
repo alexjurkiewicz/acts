@@ -1,7 +1,9 @@
 #!/bin/sh
 
-set -u # Exit if an uninitialised variable is read
-set -e # Exit if a pipeline exits non-zero
+# Exit if an uninitialised variable is read
+set -u
+# Exit if a pipeline exits non-zero
+set -e
 
 verbose=0 # set this so we can define the log_functions early
 log_message() { [ "$verbose" -ge 0 ] && echo "$@" >&2 || true ; } # FIXME: Need the "|| true" because of set -e. Is there a better workaround?
