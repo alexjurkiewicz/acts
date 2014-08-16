@@ -144,12 +144,12 @@ fi
 
 # Run the post-backup script
 if [ -n "$postbackupscript" ] ; then
-        if [ -x "$postbackupscript" ] ; then
-                log_verbose "Running $postbackupscript..."
-                $postbackupscript
-        else
-                log_message "postbackupscript ($postbackupscript) is not executable!"
-        fi
+    if [ -x "$postbackupscript" ] ; then
+        log_verbose "Running $postbackupscript..."
+        $postbackupscript
+    else
+        log_message "postbackupscript ($postbackupscript) is not executable!"
+    fi
 fi
 
 trap - INT TERM EXIT
