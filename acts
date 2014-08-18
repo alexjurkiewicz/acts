@@ -54,7 +54,7 @@ else
     fi
 fi
 
-trap "trap - INT TERM EXIT ; echo Exiting unexpectedly. >&2 ; rm -f \"$lockfile/pid\"; rmdir \"$lockfile\" ; exit 1" INT TERM EXIT
+trap 'trap - INT TERM EXIT ; echo Exiting unexpectedly. >&2 ; rm -f "$lockfile/pid"; rmdir "$lockfile" ; exit 1' INT TERM EXIT
 
 # PART 2: Preparation
 log_debug "Listing tarsnap archives"
