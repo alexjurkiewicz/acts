@@ -8,9 +8,21 @@ set -e
 starttime=$(date +%s)
 
 verbose=0 # set this so we can define the log_functions early
-log_message() { [ "$verbose" -ge 0 ] && echo "$@" >&2 || true ; } # FIXME: Need the "|| true" because of set -e. Is there a better workaround?
-log_verbose() { [ "$verbose" -ge 1 ] && echo "$@" >&2 || true ; }
-log_debug()   { [ "$verbose" -ge 2 ] && echo "$@" >&2 || true ; }
+log_message() {
+    if [ "$verbose" -ge 0 ] ; then
+        echo "$@" >&2
+    fi
+}
+log_verbose() {
+    if [ "$verbose" -ge 1 ] ; then
+        echo "$@" >&2
+    fi
+}
+log_debug()   {
+    if [ "$verbose" -ge 2 ] ; then
+        echo "$@" >&2
+    fi
+}
 
 # PART 1: Initialisation
 if [ -f acts.conf ] ; then
