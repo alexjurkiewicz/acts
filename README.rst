@@ -18,12 +18,12 @@ One Tarsnap archive is created per-target per-run. 31 daily, 12 monthly, and ind
 Usage
 -----
 
-1. Take *acts.conf* and customise it for your environment. Put it in */etc*.
+1. Take ``acts.conf`` and customise it for your environment. Put it in ``/etc``.
 2. Run ``acts`` daily from cron.
 
 Notes on behaviour:
 
-* ``acts`` creates archives of the form ``<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-target``. If you have existing archives starting with *hostname-(daily|monthly|yearly)*, they will confuse ``acts``, so don't do that.
+* ``acts`` creates archives of the form ``<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-target``. If you have existing archives starting with ``hostname-(daily|monthly|yearly)``, they will confuse ``acts``, so don't do that.
 
 * Archives are created using the following logic:
 
@@ -43,7 +43,7 @@ Notes on behaviour:
 TODO
 ----
 
-* Add per-directory excludes handling. (For now, add global excludes in your *tarsnap.conf* or *.tarsnaprc* file.)
+* Add per-directory excludes handling. (For now, add global excludes in your ``tarsnap.conf`` or ``.tarsnaprc`` file.)
 * Add some backup period configurability. (For now, you can edit the hardcoded values in the script.)
 
 Help
