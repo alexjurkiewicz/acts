@@ -1,9 +1,8 @@
 ========
-ACTS 0.9
+ACTS 1.0
 ========
 
-Another Calendar-based Tarsnap Script, or
-Alex's Crappy Tarsnap Script
+Another Calendar-based Tarsnap Script
 
 Introduction
 ------------
@@ -34,7 +33,7 @@ Notes on behaviour:
   
 * Archives are deleted using the following logic:
 
-  * If any backups failed, delete nothing
+  * If any backups failed, delete nothing.
   * Keep the most recent 31 daily backups, and delete any older ones.
   * Keep the most recent 12 monthly backups, and delete any older ones.
   * Do not delete any yearly backups.
