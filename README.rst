@@ -1,11 +1,13 @@
 ========
 ACTS 0.9
 ========
+
 Another Calendar-based Tarsnap Script, or
 Alex's Crappy Tarsnap Script
 
 Introduction
 ------------
+
 ``acts`` is a minimal shell script that creates backups with Tarsnap. Some design goals:
 
 * Just backup, no restore.
@@ -16,28 +18,36 @@ One Tarsnap archive is created per-target per-run. 31 daily, 12 monthly, and ind
 
 Usage
 -----
+
 1. Take *acts.conf* and customise it for your environment. Put it in */etc*.
 2. Run ``acts`` daily from cron.
 
 Notes on behaviour:
 
-* ``acts`` creates archives of the form *<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-dir*. If you have any existing archives starting with *hostname-(daily|monthly|yearly)*, they will confuse ``acts``, so don't do that.
+* ``acts`` creates archives of the form ``<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-target``. If you have existing archives starting with *hostname-(daily|monthly|yearly)*, they will confuse ``acts``, so don't do that.
+
 * Archives are created using the following logic:
-    * If no yearly backup for the current year exists, create a yearly backup.
-    * If a yearly backup exists but no monthly backup, create a monthly backup.
-    * Otherwise, create a daily backup.
+
+  * If no yearly backup for the current year exists, create a yearly backup.
+  * If a yearly backup exists but no monthly backup, create a monthly backup.
+  * Otherwise, create a daily backup.
+  
 * Archives are deleted using the following logic:
-    * Keep the most recent 31 daily backups, and delete any older ones.
-    * Keep the most recent 12 monthly backups, and delete any older ones.
-    * Do not delete any yearly backups.
+
+  * If any backups failed, delete nothing
+  * Keep the most recent 31 daily backups, and delete any older ones.
+  * Keep the most recent 12 monthly backups, and delete any older ones.
+  * Do not delete any yearly backups.
+  
 * Times in archive names use UTC, not the server's timezone.
 
 TODO
 ----
+
 * Add per-directory excludes handling. (For now, add global excludes in your *tarsnap.conf* or *.tarsnaprc* file.)
 * Add some backup period configurability. (For now, you can edit the hardcoded values in the script.)
 
 Help
 ----
-Email me (alex@jurkiewi.cz) or open a Github issue.
 
+Email me (alex@jurkiewi.cz) or open a Github issue.
