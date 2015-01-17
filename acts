@@ -42,6 +42,7 @@ backuptargets="${backuptargets=}"
 prebackupscript="${prebackupscript=}"
 postbackupscript="${postbackupscript=}"
 tarsnap="${tarsnap:=tarsnap}"
+tarsnapbackupoptions="${tarsnapbackupoptions=}"
 lockfile="${lockfile=/var/run/acts}"
 LANG="${LANG=en_US.UTF-8}" ; export LANG
 
@@ -116,7 +117,9 @@ backuprc=0 # Notice any failed backups
 for dir in $backuptargets ; do
     log_verbose "Backing up $dir..."
     nicedirname=$(echo "$dir" | tr -d '/')
-    if ! output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / "$dir" 2>&1)" ; then
+    # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
+    # shellcheck disable=SC2086
+    if ! output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / $tarsnapbackupoptions "$dir" 2>&1)" ; then
         log_message "Failed to back up \"$dir\"! ($output)"
         backuprc=1
     fi
