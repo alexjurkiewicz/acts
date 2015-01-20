@@ -7,20 +7,31 @@ set -e
 
 starttime=$(date +%s)
 
-verbose=0 # set this so we can define the log_functions early
+# set these so we can define the log_functions early
+verbose=0
+syslog=
 log_message() {
     if [ "$verbose" -ge 0 ] ; then
         echo "$@" >&2
+        if [ -n "$syslog" ] ; then
+            logger -t "acts[$$]" -p "$syslog.warn" "$@"
+        fi
     fi
 }
 log_verbose() {
     if [ "$verbose" -ge 1 ] ; then
         echo "$@" >&2
+        if [ -n "$syslog" ] ; then
+            logger -t "acts[$$]" -p "$syslog.info" "$@"
+        fi
     fi
 }
 log_debug()   {
     if [ "$verbose" -ge 2 ] ; then
         echo "$@" >&2
+        if [ -n "$syslog" ] ; then
+            logger -t "acts[$$]" -p "$syslog.debug" "$@"
+        fi
     fi
 }
 
