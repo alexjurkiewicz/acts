@@ -115,7 +115,7 @@ fi
 # PART 3: Backup
 backuprc=0 # Notice any failed backups
 for dir in $backuptargets ; do
-    log_verbose "Backing up $dir..."
+    log_verbose "Backing up /$dir..."
     nicedirname=$(echo "$dir" | tr -d '/')
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
     # shellcheck disable=SC2086
