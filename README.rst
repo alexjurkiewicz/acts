@@ -15,6 +15,11 @@ Introduction
 
 One Tarsnap archive is created per-target per-run. 31 daily, 12 monthly, and indefinite yearly backups are kept.
 
+Download
+--------
+
+You can use the development version of acts by cloning this repository, or `download the latest stable release (.zip) <https://github.com/alexjurkiewicz/acts/archive/1.0.zip>`_.
+
 Usage
 -----
 
