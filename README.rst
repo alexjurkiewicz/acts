@@ -23,7 +23,7 @@ You can use the development version of acts by cloning this repository, or `down
 Usage
 -----
 
-1. Take ``acts.conf`` and customise it for your environment. Put it in ``/etc``.
+1. Take ``acts.conf`` and customise it for your environment. Put it in ``/etc`` or ``/usr/local/etc``.
 2. Run ``acts`` daily from cron.
 
 Notes on behaviour:
