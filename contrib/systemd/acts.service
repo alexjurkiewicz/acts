@@ -1,0 +1,6 @@
+[Unit]
+Description=acts Tarsnap backup
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/acts
