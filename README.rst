@@ -18,7 +18,7 @@ One Tarsnap archive is created per-target per-run. 31 daily, 12 monthly, and ind
 Download
 --------
 
-You can use the development version of acts by cloning this repository, or `download the latest stable release (.tar.gz) <https://github.com/alexjurkiewicz/acts/archive/1.1.tar.gz>`_.
+You can use the development version of acts by cloning this repository, or `download the latest stable release <https://github.com/alexjurkiewicz/acts/releases/latest>`_.
 
 Usage
 -----
