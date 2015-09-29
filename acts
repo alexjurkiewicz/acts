@@ -130,6 +130,7 @@ fi
 backuprc=0 # Notice any failed backups
 for dir in $backuptargets ; do
     log_verbose "Backing up /$dir..."
+    archive_starttime=$(date +%s)
     nicedirname=$(echo "$dir" | tr -d '/')
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
     # shellcheck disable=SC2086
@@ -137,6 +138,8 @@ for dir in $backuptargets ; do
         log_message "Failed to back up \"$dir\"! ($output)"
         backuprc=1
     fi
+    archive_endtime=$(date +%s)
+    log_verbose "Backup of $dir took $((archive_endtime - archive_starttime)) seconds"
 done
 # Update the archive listing
 archives=$($tarsnap --list-archives | sort -n)
