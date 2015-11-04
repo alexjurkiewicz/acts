@@ -159,9 +159,9 @@ fi
 monthlybackups=$(echo "$archives" | grep "$hostname-monthly-" | cut -d_ -f1 | uniq | sort -rn)
 if [ "$(echo "$monthlybackups" | wc -l)" -gt 12 ] ; then
     log_debug "More than 12 monthly backups, deleting the oldest"
-    echo "$monthlybackups" | tail -n +13 | while read archiveprefixtodel ; do
+    echo "$monthlybackups" | tail -n +13 | while read -r archiveprefixtodel ; do
         log_verbose "Deleting backups $archiveprefixtodel*"
-        echo "$archives" | egrep "^$archiveprefixtodel" | while read archivetodel ; do
+        echo "$archives" | egrep "^$archiveprefixtodel" | while read -r archivetodel ; do
             log_debug "  - Deleting $archivetodel"
             $tarsnap -d -f "$archivetodel"
         done
@@ -174,9 +174,9 @@ fi
 dailybackups=$(echo "$archives" | grep "$hostname-daily-" | cut -d_ -f1 | uniq | sort -rn)
 if [ "$(echo "$dailybackups" | wc -l)" -gt 31 ] ; then
     log_debug "More than 30 daily backups, deleting the oldest"
-    echo "$dailybackups" | tail -n +32 | while read archiveprefixtodel ; do
+    echo "$dailybackups" | tail -n +32 | while read -r archiveprefixtodel ; do
         log_verbose "Deleting backups $archiveprefixtodel*"
-        echo "$archives" | egrep "^$archiveprefixtodel" | while read archivetodel ; do
+        echo "$archives" | egrep "^$archiveprefixtodel" | while read -r archivetodel ; do
             log_debug "  - Deleting $archivetodel"
             $tarsnap -d -f "$archivetodel"
         done
