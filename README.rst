@@ -2,7 +2,7 @@
 ACTS 1.2
 ========
 
-Another Calendar-based Tarsnap Script
+Another Calendar-based Tarsnap Script.
 
 Introduction
 ------------
@@ -11,29 +11,29 @@ Introduction
 
 * Just backup, no restore.
 * Calendar-based backup schedule
-* Portable, small code footprint.
+* Portable, small, code footprint.
 
 One Tarsnap archive is created per-target per-run. 31 daily, 12 monthly, and indefinite yearly backups are kept.
 
 Download
 --------
 
-You can use the development version of acts by cloning this repository, or `download the latest stable release <https://github.com/alexjurkiewicz/acts/releases/latest>`_.
+You can use the development version of ``acts`` by cloning this repository, or `download the latest stable release <https://github.com/alexjurkiewicz/acts/releases/latest>`_.
 
 Usage
 -----
 
-1. Take ``acts.conf`` and customise it for your environment. Put it in ``/etc`` or ``/usr/local/etc``.
+1. Take ``acts.conf.sample``, customise it for your environment, and save it to ``/etc/acts.conf`` or ``/usr/local/etc/acts.conf``.
 2. Run ``acts`` daily from cron.
 
 Notes on behaviour:
 
-* ``acts`` creates archives of the form ``<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-target``. If you have existing archives starting with ``hostname-(daily|monthly|yearly)``, they will confuse ``acts``, so don't do that.
+* ``acts`` creates archives of the form ``<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-target``.
 
 * Archives are created using the following logic:
 
   * If no yearly backup for the current year exists, create a yearly backup.
-  * If a yearly backup exists but no monthly backup, create a monthly backup.
+  * If no monthly backup for the current month exists, create a monthly backup.
   * Otherwise, create a daily backup.
   
 * Archives are deleted using the following logic:
