@@ -38,7 +38,8 @@ log_debug()   {
 # PART 1: Initialisation
 if [ -f acts.conf ] ; then
     . ./acts.conf
-    log_debug "Loaded $(pwd)/acts.conf"
+    # Loading from CWD is for development/debugging, so be noisy when we do
+    log_message "Loaded $(pwd)/acts.conf"
 elif [ -f /etc/acts.conf ] ; then
     . /etc/acts.conf
     log_debug "Loaded /etc/acts.conf"
