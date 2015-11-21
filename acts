@@ -121,7 +121,7 @@ else
     # There's no yearly backup
     archivetype="yearly"
 fi
-log_verbose "Creating $archivetype backup"
+log_verbose "at=start type=$archivetype"
 
 
 # Run the pre-backup script
@@ -137,17 +137,17 @@ fi
 # PART 3: Backup
 backuprc=0 # Notice any failed backups
 for dir in $backuptargets ; do
-    log_verbose "Backing up /$dir..."
+    log_verbose "at=start type=$archivetype dir=/$dir"
     archive_starttime=$(date +%s)
     nicedirname=$(echo "$dir" | tr -d '/')
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
     # shellcheck disable=SC2086
     if ! output="$($tarsnap -c -f "$hostname-$archivetype-$today-$nicedirname" -C / $tarsnapbackupoptions "$dir" 2>&1)" ; then
-        log_message "Failed to back up \"$dir\"! ($output)"
+        log_message "at=error type=$archivetype dir=/$dir output=\"$output\""
         backuprc=1
     fi
     archive_endtime=$(date +%s)
-    log_verbose "Backup of $dir took $((archive_endtime - archive_starttime)) seconds"
+    log_verbose "at=finish type=$archivetype dir=/$dir duration=$((archive_endtime - archive_starttime))s"
 done
 # Update the archive listing
 archives=$($tarsnap --list-archives | sort -n)
@@ -156,7 +156,7 @@ archives=$($tarsnap --list-archives | sort -n)
 # PART 4: Trim old backups.
 
 if [ "$backuprc" != "0" ] ; then
-    log_message "One of the backups failed -- not deleting old backups"
+    log_verbose "at=error type=$archivetype"
     exit 1
 fi
 
@@ -206,5 +206,5 @@ trap - INT TERM EXIT
 rm -f "$lockfile/pid"; rmdir "$lockfile"
 
 endtime=$(date +%s)
-log_verbose "acts run took $((endtime - starttime)) seconds"
+log_verbose "at=finish type=$archivetype duration=$((endtime - starttime))s"
 exit 0
