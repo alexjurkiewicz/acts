@@ -5,6 +5,9 @@ package: dist/acts_$(VERSION)_all.deb
 clean:
 	rm -rf dist
 
+check:
+	@ shellcheck -s sh -f gcc acts
+
 dist/acts_$(VERSION)_all.deb: dist
 	@ fpm \
 		-s dir \
