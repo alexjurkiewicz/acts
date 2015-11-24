@@ -121,7 +121,7 @@ else
     # There's no yearly backup
     archivetype="yearly"
 fi
-log_verbose "at=start type=$archivetype"
+log_verbose "Creating $archivetype backup"
 
 
 # Run the pre-backup script
@@ -156,7 +156,7 @@ archives=$($tarsnap --list-archives | sort -n)
 # PART 4: Trim old backups.
 
 if [ "$backuprc" != "0" ] ; then
-    log_verbose "at=error type=$archivetype"
+    log_message "One of the backups failed -- not deleting old backups"
     exit 1
 fi
 
