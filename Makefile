@@ -24,7 +24,11 @@ dist/acts_$(VERSION)_all.deb: dist
 		-d "coreutils >= 8.21" \
 		--exclude .git \
 		--deb-priority "extra" \
-		"acts=/usr/bin/acts"
+		--config-files "/etc/acts.conf" \
+		--deb-no-default-config-files \
+		"acts=/usr/bin/acts" \
+		"acts.conf.sample=/etc/acts.conf" \
+		"contrib/=/usr/share/doc/acts/contrib/"
 
 dist:
 	@ mkdir dist
