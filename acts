@@ -5,6 +5,13 @@ set -u
 # Exit if a pipeline exits non-zero
 set -e
 
+VERSION="1.2"
+
+if [ "$1" = "--version" ]; then
+    echo "acts version $VERSION"
+    exit 0
+fi
+
 starttime=$(date +%s)
 
 # set these so we can define the log_functions early
