@@ -28,6 +28,7 @@ dist/acts_$(VERSION)_all.deb: dist
 		--deb-no-default-config-files \
 		"acts=/usr/bin/acts" \
 		"acts.conf.sample=/etc/acts.conf" \
+		"README.md=/usr/share/docs/acts/README.md" \
 		"contrib/=/usr/share/doc/acts/contrib/"
 
 dist:
