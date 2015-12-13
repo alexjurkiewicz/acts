@@ -19,25 +19,25 @@ verbose=0
 syslog=
 log_message() {
     if [ "$verbose" -ge 0 ] ; then
-        echo "$@" >&2
+        echo "Warning: $*" >&2
         if [ -n "$syslog" ] ; then
-            logger -t "acts[$$]" -p "$syslog.warn" "$@"
+            logger -t "acts[$$]" -p "$syslog.warn" "level=warn $*"
         fi
     fi
 }
 log_verbose() {
     if [ "$verbose" -ge 1 ] ; then
-        echo "$@" >&2
+        echo "Info: $*" >&2
         if [ -n "$syslog" ] ; then
-            logger -t "acts[$$]" -p "$syslog.info" "$@"
+            logger -t "acts[$$]" -p "$syslog.info" "level=info $*"
         fi
     fi
 }
 log_debug()   {
     if [ "$verbose" -ge 2 ] ; then
-        echo "$@" >&2
+        echo "Debug: $*" >&2
         if [ -n "$syslog" ] ; then
-            logger -t "acts[$$]" -p "$syslog.debug" "$@"
+            logger -t "acts[$$]" -p "$syslog.debug" "level=debug $*"
         fi
     fi
 }
