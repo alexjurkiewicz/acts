@@ -17,6 +17,13 @@ starttime=$(date +%s)
 # set these so we can define the log_functions early
 verbose=0
 syslog=
+log_error() {
+    echo "Error: $*" >&2
+    if [ -n "$syslog" ] ; then
+        logger -t "acts[$$]" -p "$syslog.warn" "level=error $*"
+    fi
+    exit 1
+}
 log_message() {
     if [ "$verbose" -ge 0 ] ; then
         echo "Warning: $*" >&2
@@ -40,6 +47,11 @@ log_debug()   {
             logger -t "acts[$$]" -p "$syslog.debug" "level=debug $*"
         fi
     fi
+}
+
+die() {
+    log_error "$* action=exiting"
+    exit 1
 }
 
 # PART 1: Initialisation
