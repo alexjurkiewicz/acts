@@ -7,7 +7,7 @@ set -e
 
 VERSION="1.2"
 
-if [ "$1" = "--version" ]; then
+if [ "$#" = "1" ] && [ "$1" = "--version" ]; then
     echo "acts version $VERSION"
     exit 0
 fi
