@@ -1,5 +1,5 @@
-ACTS 1.2
-========
+ACTS 1.3b1
+==========
 
 Another Calendar-based Tarsnap Script.
 
