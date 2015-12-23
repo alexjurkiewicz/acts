@@ -4,7 +4,7 @@ Description=Run acts Tarsnap backup daily
 [Timer]
 OnCalendar=daily
 Persistent=true
-Unit=tarsnap-acts.service
+Unit=acts.service
 
 [Install]
 WantedBy=multi-user.target
