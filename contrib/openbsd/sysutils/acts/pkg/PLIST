@@ -1,7 +1,7 @@
 @comment $OpenBSD$
 libexec/acts
 share/doc/acts/
-share/doc/acts/README.rst
+share/doc/acts/README.md
 share/doc/pkg-readmes/${FULLPKGNAME}
 share/examples/acts/
 share/examples/acts/acts-post.sh

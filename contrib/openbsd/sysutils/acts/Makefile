@@ -1,6 +1,6 @@
 # $OpenBSD$
 COMMENT =		another calendar-based tarsnap script
-V =			1.2
+V =			1.3b1
 DISTNAME =		acts-${V}
 CATEGORIES =		sysutils
 
@@ -27,7 +27,7 @@ do-install:
 	${INSTALL_SCRIPT} ${WRKSRC}/contrib/acts-post.sh $E
 	${INSTALL_DATA} ${WRKSRC}/acts.conf.sample ${E}/acts.conf
 	${INSTALL_DATA_DIR} $D
-	${INSTALL_DATA} ${WRKSRC}/README.rst $D
+	${INSTALL_DATA} ${WRKSRC}/README.md $D
 
 
 .include <bsd.port.mk>
