@@ -21,7 +21,7 @@ dist/acts_$(VERSION)_all.deb: dist
 		--architecture "all" \
 		--url "https://github.com/alexjurkiewicz/acts" \
 		-d "bsdutils" \
-		-d "coreutils >= 8.21" \
+		-d "coreutils >= 8.13" \
 		--exclude .git \
 		--deb-priority "extra" \
 		--config-files "/etc/acts.conf" \
