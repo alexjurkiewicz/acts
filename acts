@@ -12,6 +12,14 @@ if [ "$#" = "1" ] && [ "$1" = "--version" ]; then
     exit 0
 fi
 
+if [ "$#" = "1" ] && ([ "$1" = "-h" ] || [ "$1" = "--help" ]) ; then
+    echo "usage: acts"
+    echo
+    echo "Configuration should be in /etc/acts.conf or /usr/local/etc/acts.conf"
+    echo "See https://github.com/alexjurkiewicz/acts for more information."
+    exit 0
+fi
+
 starttime=$(date +%s)
 
 # set these so we can define the log_functions early
