@@ -47,7 +47,6 @@ Notes on behaviour:
     -   Keep the most recent 12 monthly backups, and delete any older
         ones.
     -   Do not delete any yearly backups.
--   Times in archive names use UTC, not the server's timezone.
 
 TODO
 ----

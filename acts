@@ -71,6 +71,7 @@ fi
 # Use default values if anything is not set
 verbose="${verbose=0}"
 hostname="${hostname=$(hostname -s)}"
+uselocaltime="${uselocaltime=0}"
 backuptargets="${backuptargets=}"
 prebackupscript="${prebackupscript=}"
 postbackupscript="${postbackupscript=}"
@@ -82,6 +83,14 @@ LANG="${LANG=en_US.UTF-8}" ; export LANG
 # Parameter validation
 if [ -z "$backuptargets" ] ; then
     die "config-error message=\"\$backuptargets is not set in acts.conf.\""
+fi
+
+if [ "$uselocaltime" = 0 ] ; then
+  utc="-u"
+elif [ "$uselocaltime" = 1 ] ; then
+  utc=""
+else
+  die "config-error message=\"invalid \$uselocaltime in acts.conf; valid options are 0 (for UTC) or 1 (for local time).\""
 fi
 
 # Create the lock. mkdir is atomic test/set, so use that instead of the typical test -f/touch combo
@@ -108,7 +117,7 @@ archives=$(echo "$archives_unsorted" | sort -n)
 
 # When is now?
 # Instead of re-running date, be paranoid the day was microseconds away from ending
-today=$(date -u "+%Y-%m-%d_%H:%M:%S")
+today=$(date "$utc" "+%Y-%m-%d_%H:%M:%S")
 year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
 month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
 # day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused

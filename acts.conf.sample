@@ -29,6 +29,11 @@ verbose=1
 # Default: $(hostname -s)
 #hostname=$(hostname)
 
+# uselocaltime
+# Use local time instead of UTC for the archive date and timestamps.
+# Default: 0 (i.e. use UTC)
+#uselocaltime=1
+
 # prebackupscript
 # This script is run before backups are created. Make sure it's executable.
 # Default: unset
