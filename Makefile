@@ -6,7 +6,8 @@ clean:
 	rm -rf dist
 
 check:
-	@ shellcheck -s sh -f gcc acts
+	@ shellcheck -s sh -f gcc -e SC1091 acts
+	@ shellcheck -s sh -f gcc -e SC2034 acts.conf.sample
 
 dist/acts_$(VERSION)_all.deb: dist
 	@ fpm \
