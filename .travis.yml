@@ -4,6 +4,9 @@ language: bash
 # Use container-based infrastructure for quicker build start-up
 sudo: false
 
+before_install:
+  - go get -u github.com/mvdan/sh/cmd/shfmt
+
 addons:
   apt:
     sources:
