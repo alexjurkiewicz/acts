@@ -12,7 +12,7 @@ if [ "$#" = "1" ] && [ "$1" = "--version" ]; then
     exit 0
 fi
 
-if [ "$#" = "1" ] && ([ "$1" = "-h" ] || [ "$1" = "--help" ]) ; then
+if [ "$#" = "1" ] && ([ "$1" = "-h" ] || [ "$1" = "--help" ]); then
     echo "usage: acts"
     echo
     echo "Configuration should be in /etc/acts.conf or /usr/local/etc/acts.conf"
@@ -27,31 +27,31 @@ verbose=0
 syslog=
 log_error() {
     echo "Error: $*" >&2
-    if [ -n "$syslog" ] ; then
+    if [ -n "$syslog" ]; then
         logger -t "acts[$$]" -p "$syslog.warn" "level=error $*"
     fi
     exit 1
 }
 log_message() {
-    if [ "$verbose" -ge 0 ] ; then
+    if [ "$verbose" -ge 0 ]; then
         echo "Warning: $*" >&2
-        if [ -n "$syslog" ] ; then
+        if [ -n "$syslog" ]; then
             logger -t "acts[$$]" -p "$syslog.warn" "level=warn $*"
         fi
     fi
 }
 log_verbose() {
-    if [ "$verbose" -ge 1 ] ; then
+    if [ "$verbose" -ge 1 ]; then
         echo "Info: $*" >&2
-        if [ -n "$syslog" ] ; then
+        if [ -n "$syslog" ]; then
             logger -t "acts[$$]" -p "$syslog.info" "level=info $*"
         fi
     fi
 }
-log_debug()   {
-    if [ "$verbose" -ge 2 ] ; then
+log_debug() {
+    if [ "$verbose" -ge 2 ]; then
         echo "Debug: $*" >&2
-        if [ -n "$syslog" ] ; then
+        if [ -n "$syslog" ]; then
             logger -t "acts[$$]" -p "$syslog.debug" "level=debug $*"
         fi
     fi
@@ -63,14 +63,14 @@ die() {
 }
 
 # PART 1: Initialisation
-if [ -f acts.conf ] ; then
+if [ -f acts.conf ]; then
     . ./acts.conf
     # Loading from CWD is for development/debugging, so be noisy when we do
     log_message "load-config source=$(pwd)/acts.conf message=\"Loading config from CWD is intended for development use only\""
-elif [ -f /etc/acts.conf ] ; then
+elif [ -f /etc/acts.conf ]; then
     . /etc/acts.conf
     log_debug "load-config source=/etc/acts.conf"
-elif [ -f /usr/local/etc/acts.conf ] ; then
+elif [ -f /usr/local/etc/acts.conf ]; then
     . /usr/local/etc/acts.conf
     log_debug "load-config source=/usr/local/etc/acts.conf"
 else
@@ -86,27 +86,28 @@ postbackupscript="${postbackupscript=}"
 tarsnap="${tarsnap:=tarsnap}"
 tarsnapbackupoptions="${tarsnapbackupoptions=}"
 lockfile="${lockfile=/var/run/acts}"
-LANG="${LANG=en_US.UTF-8}" ; export LANG
+LANG="${LANG=en_US.UTF-8}"
+export LANG
 
 # Parameter validation
-if [ -z "$backuptargets" ] ; then
+if [ -z "$backuptargets" ]; then
     die "config-error message=\"\$backuptargets is not set in acts.conf.\""
 fi
 
-if [ "$uselocaltime" = 0 ] ; then
-  utc="-u"
-elif [ "$uselocaltime" = 1 ] ; then
-  utc=""
+if [ "$uselocaltime" = 0 ]; then
+    utc="-u"
+elif [ "$uselocaltime" = 1 ]; then
+    utc=""
 else
-  die "config-error message=\"invalid \$uselocaltime in acts.conf; valid options are 0 (for UTC) or 1 (for local time).\""
+    die "config-error message=\"invalid \$uselocaltime in acts.conf; valid options are 0 (for UTC) or 1 (for local time).\""
 fi
 
 # Create the lock. mkdir is atomic test/set, so use that instead of the typical test -f/touch combo
-if [ -d "$lockfile" ] ; then
+if [ -d "$lockfile" ]; then
     die "acts-error message=\"$lockfile exists referencing PID $(cat "$lockfile/pid" 2>/dev/null || echo "<none>"). Hint: If acts is not already running, rm -rf $lockfile.\""
 else
-    if output=$(mkdir "$lockfile" 2>&1) ; then
-        echo $$ > "$lockfile/pid"
+    if output=$(mkdir "$lockfile" 2>&1); then
+        echo $$ >"$lockfile/pid"
         log_debug "message=\"Created $lockfile/ with 'pid' referencing $$\""
     else
         die "acts-error message=\"Can't create lock $lockfile: $output\""
@@ -117,7 +118,7 @@ trap 'trap - INT TERM EXIT ; echo Exiting unexpectedly. >&2 ; rm -f "$lockfile/p
 
 # PART 2: Preparation
 log_debug "Listing tarsnap archives"
-if ! archives_unsorted=$($tarsnap --list-archives) ; then
+if ! archives_unsorted=$($tarsnap --list-archives); then
     die "acts-tarsnap-error message=\"Couldn't get list of existing archives (Hint: is Tarsnap configured correctly?)\""
     exit 1
 fi
@@ -131,8 +132,8 @@ month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
 # day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
 
 # Determine the archive type to create
-if echo "$archives" | egrep -q "^$hostname-yearly-$year" ; then
-    if echo "$archives" | egrep -q "^$hostname-monthly-$year-$month" ; then
+if echo "$archives" | egrep -q "^$hostname-yearly-$year"; then
+    if echo "$archives" | egrep -q "^$hostname-monthly-$year-$month"; then
         # There's a yearly and monthly backup already
         archivetype="daily"
     else
@@ -145,10 +146,9 @@ else
 fi
 log_verbose "archive-type type=$archivetype"
 
-
 # Run the pre-backup script
-if [ -n "$prebackupscript" ] ; then
-    if [ -x "$prebackupscript" ] ; then
+if [ -n "$prebackupscript" ]; then
+    if [ -x "$prebackupscript" ]; then
         log_verbose "run-prebackupscript script=$prebackupscript..."
         $prebackupscript
     else
@@ -158,14 +158,14 @@ fi
 
 # PART 3: Backup
 backuprc=0 # Notice any failed backups
-for dir in $backuptargets ; do
+for dir in $backuptargets; do
     archive_starttime=$(date +%s)
     nicedirname=$(echo "$dir" | tr -d '/')
     archivename="$hostname-$archivetype-$today-$nicedirname"
     log_verbose "backup-start type=$archivetype dir=/$dir name=$archivename"
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
     # shellcheck disable=SC2086
-    if ! output="$($tarsnap -c -f "$archivename" -C / $tarsnapbackupoptions "$dir" 2>&1)" ; then
+    if ! output="$($tarsnap -c -f "$archivename" -C / $tarsnapbackupoptions "$dir" 2>&1)"; then
         log_message "backup-error type=$archivetype dir=/$dir output=\"$(echo $output | tr '\n' " ")\""
         backuprc=1
     fi
@@ -175,9 +175,8 @@ done
 # Update the archive listing
 archives=$($tarsnap --list-archives | sort -n)
 
-
 # PART 4: Trim old backups.
-if [ "$backuprc" != "0" ] ; then
+if [ "$backuprc" != "0" ]; then
     die "acts-tarsnap-error One of the backups failed -- not deleting old backups"
 fi
 
@@ -185,11 +184,11 @@ fi
 
 # We keep 12 monthly backups
 monthlybackups=$(echo "$archives" | grep "$hostname-monthly-" | cut -d_ -f1 | uniq | sort -rn)
-if [ "$(echo "$monthlybackups" | wc -l)" -gt 12 ] ; then
+if [ "$(echo "$monthlybackups" | wc -l)" -gt 12 ]; then
     log_debug 'message="More than 12 monthly backups, deleting the oldest"'
-    echo "$monthlybackups" | tail -n +13 | while read -r archiveprefixtodel ; do
+    echo "$monthlybackups" | tail -n +13 | while read -r archiveprefixtodel; do
         log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
-        echo "$archives" | egrep "^$archiveprefixtodel" | while read -r archivetodel ; do
+        echo "$archives" | egrep "^$archiveprefixtodel" | while read -r archivetodel; do
             log_debug "message=\"Deleting backup $archivetodel\""
             $tarsnap -d -f "$archivetodel"
         done
@@ -200,11 +199,11 @@ fi
 
 # We keep 31 daily backups
 dailybackups=$(echo "$archives" | grep "$hostname-daily-" | cut -d_ -f1 | uniq | sort -rn)
-if [ "$(echo "$dailybackups" | wc -l)" -gt 31 ] ; then
+if [ "$(echo "$dailybackups" | wc -l)" -gt 31 ]; then
     log_debug "message=\"More than 30 daily backups, deleting the oldest\""
-    echo "$dailybackups" | tail -n +32 | while read -r archiveprefixtodel ; do
+    echo "$dailybackups" | tail -n +32 | while read -r archiveprefixtodel; do
         log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
-        echo "$archives" | egrep "^$archiveprefixtodel" | while read -r archivetodel ; do
+        echo "$archives" | egrep "^$archiveprefixtodel" | while read -r archivetodel; do
             log_debug "message=\"Deleting backup $archivetodel\""
             $tarsnap -d -f "$archivetodel"
         done
@@ -214,8 +213,8 @@ else
 fi
 
 # Run the post-backup script
-if [ -n "$postbackupscript" ] ; then
-    if [ -x "$postbackupscript" ] ; then
+if [ -n "$postbackupscript" ]; then
+    if [ -x "$postbackupscript" ]; then
         log_verbose "run-prebackupscript script=$postbackupscript..."
         $postbackupscript
     else
@@ -224,7 +223,8 @@ if [ -n "$postbackupscript" ] ; then
 fi
 
 trap - INT TERM EXIT
-rm -f "$lockfile/pid"; rmdir "$lockfile"
+rm -f "$lockfile/pid"
+rmdir "$lockfile"
 
 endtime=$(date +%s)
 log_verbose "acts-finished duration=$((endtime - starttime))s action=exiting"
