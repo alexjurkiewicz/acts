@@ -11,6 +11,8 @@ addons:
     packages:
     - shellcheck
 
+go:
+  - master
 env:
   - GOPATH=~/.go
 
