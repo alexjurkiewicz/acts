@@ -1,5 +1,6 @@
-# From https://github.com/koalaman/shellcheck/wiki/TravisCI
-language: bash
+language: go  # Use go language for shfmt
+go:
+  - master
 
 # Use container-based infrastructure for quicker build start-up
 sudo: false
@@ -9,7 +10,6 @@ addons:
     sources:
     - debian-sid    # Grab shellcheck from the Debian repo (o_O)
     packages:
-    - golang-go     # Need a new version of Go for shfmt
     - shellcheck
 
 env:
