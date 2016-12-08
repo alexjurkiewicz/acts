@@ -9,10 +9,9 @@ addons:
     sources:
     - debian-sid    # Grab shellcheck from the Debian repo (o_O)
     packages:
+    - golang-go     # Need a new version of Go for shfmt
     - shellcheck
 
-go:
-  - master
 env:
   - GOPATH=~/.go
 
