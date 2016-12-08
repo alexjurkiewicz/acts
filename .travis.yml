@@ -12,9 +12,6 @@ addons:
     packages:
     - shellcheck
 
-env:
-  - GOPATH=~/.go
-
 install:
   - go get -u github.com/mvdan/sh/cmd/shfmt
 
