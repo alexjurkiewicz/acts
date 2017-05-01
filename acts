@@ -126,7 +126,7 @@ archives=$(echo "$archives_unsorted" | sort -n)
 
 # When is now?
 # Instead of re-running date, be paranoid the day was microseconds away from ending
-today=$(date "$utc" "+%Y-%m-%d_%H:%M:%S")
+today=$(date $utc "+%Y-%m-%d_%H:%M:%S")
 year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
 month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
 # day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
