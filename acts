@@ -132,8 +132,8 @@ month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
 # day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
 
 # Determine the archive type to create
-if echo "$archives" | egrep -q "^$hostname-yearly-$year"; then
-    if echo "$archives" | egrep -q "^$hostname-monthly-$year-$month"; then
+if echo "$archives" | grep -E -q "^$hostname-yearly-$year"; then
+    if echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month"; then
         # There's a yearly and monthly backup already
         archivetype="daily"
     else
@@ -188,7 +188,7 @@ if [ "$(echo "$monthlybackups" | wc -l)" -gt 12 ]; then
     log_debug 'message="More than 12 monthly backups, deleting the oldest"'
     echo "$monthlybackups" | tail -n +13 | while read -r archiveprefixtodel; do
         log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
-        echo "$archives" | egrep "^$archiveprefixtodel" | while read -r archivetodel; do
+        echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
             log_debug "message=\"Deleting backup $archivetodel\""
             $tarsnap -d -f "$archivetodel"
         done
@@ -203,7 +203,7 @@ if [ "$(echo "$dailybackups" | wc -l)" -gt 31 ]; then
     log_debug "message=\"More than 30 daily backups, deleting the oldest\""
     echo "$dailybackups" | tail -n +32 | while read -r archiveprefixtodel; do
         log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
-        echo "$archives" | egrep "^$archiveprefixtodel" | while read -r archivetodel; do
+        echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
             log_debug "message=\"Deleting backup $archivetodel\""
             $tarsnap -d -f "$archivetodel"
         done
