@@ -127,7 +127,7 @@ archives=$(echo "$archives_unsorted" | sort -n)
 # Run the pre-backup script
 if [ -n "$prebackupscript" ]; then
     if [ -x "$prebackupscript" ]; then
-        log_verbose "run-prebackupscript script=$prebackupscript..."
+        log_verbose "run-prebackupscript script=$prebackupscript"
         $prebackupscript
     else
         die "acts-error message=\"prebackupscript $prebackupscript is not executable!\""
@@ -164,6 +164,7 @@ for dir in $backuptargets; do
     fi
     log_verbose "archive-type type=$archivetype dir=/$dir"
 
+    # Create the backup
     archivename="$hostname-$archivetype-$today-$nicedirname"
     log_verbose "backup-start type=$archivetype dir=/$dir name=$archivename"
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
@@ -172,6 +173,7 @@ for dir in $backuptargets; do
         log_message "backup-error type=$archivetype dir=/$dir output=\"$(echo $output | tr '\n' " ")\""
         backuprc=1
     fi
+
     archive_endtime=$(date +%s)
     log_verbose "backup-finish type=$archivetype dir=/$dir duration=$((archive_endtime - archive_starttime))s"
 done
