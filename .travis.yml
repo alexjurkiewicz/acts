@@ -1,22 +1,16 @@
-language: go  # Use go language for shfmt
-go:
-  - master
-
-# Use container-based infrastructure for quicker build start-up
-sudo: false
+language: minimal
 
 addons:
   apt:
     sources:
-    - debian-sid    # Grab shellcheck from the Debian repo (o_O)
-    packages:
     - shellcheck
 
-install:
-  - go get -u github.com/mvdan/sh/cmd/shfmt
+before_install:
+  - gimme stable
+  - go get -u mvdan.cc/sh/cmd/shfmt
 
 script:
- - make check
-
-matrix:
-  fast_finish: true
+  - shellcheck -e SC1091 acts
+  - shfmt -i 4 -d acts
+  - shellcheck -e SC2034 acts.conf.sample
+  - shfmt -i 4 -d acts.conf.sample

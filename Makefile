@@ -5,12 +5,6 @@ package: dist/acts_$(VERSION)_all.deb
 clean:
 	rm -rf dist
 
-check:
-	shellcheck -s sh -f gcc -e SC1091 acts
-	shellcheck -s sh -f gcc -e SC2034 acts.conf.sample
-	@ echo shfmt -l -i 4 acts acts.conf.sample
-	@ [ -z $(shell shfmt -l -i 4 acts acts.conf.sample) ] || { echo $(shell shfmt -l -i 4 acts acts.conf.sample) && exit 1; }
-
 dist/acts_$(VERSION)_all.deb: dist
 	@ fpm \
 		-s dir \
@@ -39,5 +33,4 @@ dist:
 
 .PHONY: \
 	package \
-	check \
 	clean
