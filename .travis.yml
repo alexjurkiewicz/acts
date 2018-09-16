@@ -1,10 +1,5 @@
 language: minimal
 
-addons:
-  apt:
-    sources:
-    - shellcheck
-
 before_install:
   - go get -u mvdan.cc/sh/cmd/shfmt
 
