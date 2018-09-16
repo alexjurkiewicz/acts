@@ -124,13 +124,6 @@ if ! archives_unsorted=$($tarsnap --list-archives); then
 fi
 archives=$(echo "$archives_unsorted" | sort -n)
 
-# When is now?
-# Instead of re-running date, be paranoid the day was microseconds away from ending
-today=$(date $utc "+%Y-%m-%d_%H:%M:%S")
-year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
-month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
-# day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
-
 # Run the pre-backup script
 if [ -n "$prebackupscript" ]; then
     if [ -x "$prebackupscript" ]; then
@@ -146,6 +139,13 @@ backuprc=0 # Notice any failed backups
 for dir in $backuptargets; do
     archive_starttime=$(date +%s)
     nicedirname=$(echo "$dir" | tr -d '/')
+
+    # What's the time?
+    # Instead of re-running date, be paranoid the day was microseconds away from ending
+    today=$(date $utc "+%Y-%m-%d_%H:%M:%S")
+    year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
+    month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
+    # day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
 
     # Determine the archive type to create
     # See if there is a yearly backup for the current year, and a monthly backup
