@@ -6,7 +6,6 @@ addons:
     - shellcheck
 
 before_install:
-  - gimme stable
   - go get -u mvdan.cc/sh/cmd/shfmt
 
 script:
