@@ -21,7 +21,7 @@ Download
 
 You can use the development version of `acts` by cloning this
 repository, or [download the latest stable
-release](https://github.com/alexjurkiewicz/acts/releases/latest).
+release](https://github.com/alexjurkiewicz/acts/releases/).
 
 Usage
 -----
@@ -56,6 +56,11 @@ TODO
 -   Add some backup period configurability. (For now, you can edit the
     hardcoded values in the script.)
 
+FAQ
+---
+
+* **How do I back up directories with spaces?** Sorry, acts doesn't support this. I suggest you create a symlink to the target directory which doesn't have spaces in its path, and add `-L` to `tarsnapbackupoptions` in your configuration file.
+
 License
 -------
 
@@ -64,4 +69,4 @@ This is free and unencumbered software released into the public domain.
 Help
 ----
 
-Email me (<alex@jurkiewi.cz>) or open a Github issue.
+Open a Github issue, or you can email me (<alex@jurkiewi.cz>).
