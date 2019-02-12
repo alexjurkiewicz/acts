@@ -131,21 +131,6 @@ year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
 month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
 # day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
 
-# Determine the archive type to create
-if echo "$archives" | grep -E -q "^$hostname-yearly-$year"; then
-    if echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month"; then
-        # There's a yearly and monthly backup already
-        archivetype="daily"
-    else
-        # There was a yearly but no monthly backup
-        archivetype="monthly"
-    fi
-else
-    # There's no yearly backup
-    archivetype="yearly"
-fi
-log_verbose "archive-type type=$archivetype"
-
 # Run the pre-backup script
 if [ -n "$prebackupscript" ]; then
     if [ -x "$prebackupscript" ]; then
@@ -159,8 +144,23 @@ fi
 # PART 3: Backup
 backuprc=0 # Notice any failed backups
 for dir in $backuptargets; do
+    log_debug "message=\"Starting backup of $dir\""
     archive_starttime=$(date +%s)
     nicedirname=$(echo "$dir" | tr -d '/')
+    # Determine the archive type to create
+    if echo "$archives" | grep -E -q "^$hostname-yearly-$year-.+-$nicedirname$"; then
+        if echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month-.+-$nicedirname$"; then
+            # There's a yearly and monthly backup already
+            archivetype="daily"
+        else
+            # There was a yearly but no monthly backup
+            archivetype="monthly"
+        fi
+    else
+        # There's no yearly backup
+        archivetype="yearly"
+    fi
+    log_verbose "archive-type type=$archivetype"
     archivename="$hostname-$archivetype-$today-$nicedirname"
     log_verbose "backup-start type=$archivetype dir=/$dir name=$archivename"
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
@@ -180,37 +180,41 @@ if [ "$backuprc" != "0" ]; then
     die "acts-tarsnap-error One of the backups failed -- not deleting old backups"
 fi
 
-# We don't delete any yearly backups
+for dir in $backuptargets; do
+    log_debug "message=\"Checking $dir for old backups to delete\""
+    nicedirname=$(echo "$dir" | tr -d '/')
+    # We don't delete any yearly backups
 
-# We keep 12 monthly backups
-monthlybackups=$(echo "$archives" | grep "$hostname-monthly-" | cut -d_ -f1 | uniq | sort -rn)
-if [ "$(echo "$monthlybackups" | wc -l)" -gt 12 ]; then
-    log_debug 'message="More than 12 monthly backups, deleting the oldest"'
-    echo "$monthlybackups" | tail -n +13 | while read -r archiveprefixtodel; do
-        log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
-        echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
-            log_debug "message=\"Deleting backup $archivetodel\""
-            $tarsnap -d -f "$archivetodel"
+    # We keep 12 monthly backups
+    monthlybackups=$(echo "$archives" | grep "$hostname-monthly-.+-$nicedirname$" | sort -rn)
+    if [ "$(echo "$monthlybackups" | wc -l)" -gt 12 ]; then
+        log_debug 'message="More than 12 monthly backups, deleting the oldest"'
+        echo "$monthlybackups" | tail -n +13 | while read -r archiveprefixtodel; do
+            log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
+            echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
+                log_debug "message=\"Deleting backup $archivetodel\""
+                $tarsnap -d -f "$archivetodel"
+            done
         done
-    done
-else
-    log_debug "message=\"Found $(echo "$monthlybackups" | wc -l) monthly backups, not deleting\""
-fi
+    else
+        log_debug "message=\"Found $(echo "$monthlybackups" | wc -l) monthly backups, not deleting\""
+    fi
 
-# We keep 31 daily backups
-dailybackups=$(echo "$archives" | grep "$hostname-daily-" | cut -d_ -f1 | uniq | sort -rn)
-if [ "$(echo "$dailybackups" | wc -l)" -gt 31 ]; then
-    log_debug "message=\"More than 30 daily backups, deleting the oldest\""
-    echo "$dailybackups" | tail -n +32 | while read -r archiveprefixtodel; do
-        log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
-        echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
-            log_debug "message=\"Deleting backup $archivetodel\""
-            $tarsnap -d -f "$archivetodel"
+    # We keep 31 daily backups
+    dailybackups=$(echo "$archives" | grep "$hostname-daily-.+-$nicedirname$" | sort -rn)
+    if [ "$(echo "$dailybackups" | wc -l)" -gt 31 ]; then
+        log_debug "message=\"More than 30 daily backups, deleting the oldest\""
+        echo "$dailybackups" | tail -n +32 | while read -r archiveprefixtodel; do
+            log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
+            echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
+                log_debug "message=\"Deleting backup $archivetodel\""
+                $tarsnap -d -f "$archivetodel"
+            done
         done
-    done
-else
-    log_debug "message=\"Found $(echo "$dailybackups" | wc -l) daily backups, not deleting any\""
-fi
+    else
+        log_debug "message=\"Found $(echo "$dailybackups" | wc -l) daily backups, not deleting any\""
+    fi
+done
 
 # Run the post-backup script
 if [ -n "$postbackupscript" ]; then
