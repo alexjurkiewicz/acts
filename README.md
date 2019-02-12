@@ -47,6 +47,7 @@ Notes on behaviour:
     -   Keep the most recent 12 monthly backups, and delete any older
         ones.
     -   Do not delete any yearly backups.
+-   If you ever remove a backup path from your config, its old backups will no longer be automatically cleaned.
 
 TODO
 ----
