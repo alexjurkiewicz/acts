@@ -6,10 +6,10 @@ addons:
     - shellcheck
 
 before_install:
-  - go get -u mvdan.cc/sh/cmd/shfmt
+  #- go get -u mvdan.cc/sh/cmd/shfmt
 
 script:
   - shellcheck -e SC1091 acts
-  - shfmt -i 4 -d acts
+  #- shfmt -i 4 -d acts
   - shellcheck -e SC2034 acts.conf.sample
-  - shfmt -i 4 -d acts.conf.sample
+  #- shfmt -i 4 -d acts.conf.sample
