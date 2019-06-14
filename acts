@@ -13,11 +13,16 @@ if [ "$#" = "1" ] && [ "$1" = "--version" ]; then
 fi
 
 if [ "$#" = "1" ] && { [ "$1" = "-h" ] || [ "$1" = "--help" ]; }; then
-    echo "usage: acts"
+    echo "usage: acts [-c /path/to/acts.conf]"
     echo
-    echo "Configuration should be in /etc/acts.conf or /usr/local/etc/acts.conf"
+    echo "Configuration should be in /etc/acts.conf or /usr/local/etc/acts.conf,"
+    echo "or given after the -c option"
     echo "See https://github.com/alexjurkiewicz/acts for more information."
     exit 0
+fi
+
+if [ "$#" = 2 ] && [ "$1" = "-c" ]; then
+    acts_conf=$2
 fi
 
 starttime=$(date +%s)
@@ -63,10 +68,13 @@ die() {
 }
 
 # PART 1: Initialisation
-if [ -f acts.conf ]; then
-    . ./acts.conf
-    # Loading from CWD is for development/debugging, so be noisy when we do
-    log_message "load-config source=$(pwd)/acts.conf message=\"Loading config from CWD is intended for development use only\""
+if [ -n "$acts_conf" ]; then
+    if [ -f "$acts_conf" ]; then
+        . "$acts_conf"
+        log_debug "load-config source=$acts_conf"
+    else
+        die "load-config source=$acts_conf message=\"User-specified config not found\""
+    fi
 elif [ -f /etc/acts.conf ]; then
     . /etc/acts.conf
     log_debug "load-config source=/etc/acts.conf"
@@ -74,7 +82,7 @@ elif [ -f /usr/local/etc/acts.conf ]; then
     . /usr/local/etc/acts.conf
     log_debug "load-config source=/usr/local/etc/acts.conf"
 else
-    die "load-config-error message=\"No $(pwd)/acts.conf, /etc/acts.conf or /usr/local/etc/acts.conf\""
+    die "load-config-error message=\"No /etc/acts.conf, /usr/local/etc/acts.conf, or -c option\""
 fi
 # Use default values if anything is not set
 verbose="${verbose=0}"
