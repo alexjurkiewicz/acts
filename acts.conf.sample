@@ -54,3 +54,10 @@ verbose=1
 # Where acts should write its lockfile.
 # Default: /var/run/acts
 #lockfile=/tmp/acts
+
+# How many backups of each type to keep
+# For all limits, 0 means keep indefinitely
+# Defaults: 31 daily, 12 monthly, and yearly indefinitely
+# dailybackups=31
+# monthlybackups=12
+# yearlybackups=0
