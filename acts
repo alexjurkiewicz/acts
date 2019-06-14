@@ -134,6 +134,16 @@ fi
 
 trap 'trap - INT TERM EXIT ; echo Exiting unexpectedly. >&2 ; rm -f "$lockfile/pid"; rmdir "$lockfile" ; exit 1' INT TERM EXIT
 
+# nicedirname:  /foo/bar -> '-foobar', / -> ''
+nicedirname() {
+    dirname=$(echo "$1" | tr -d '/')
+    # Use printf so that non-POSIX echo(1) doesn't think it's a flag
+    case $dirname in
+        '' | '.') echo '';;
+        *)        printf '\-%s' "$dirname";;
+    esac
+}
+
 # PART 2: Preparation
 log_debug "Listing tarsnap archives"
 if ! archives_unsorted=$($tarsnap --list-archives); then
@@ -164,10 +174,10 @@ backuprc=0 # Notice any failed backups
 for dir in $backuptargets; do
     log_debug "message=\"Starting backup of $dir\""
     archive_starttime=$(date +%s)
-    nicedirname=$(echo "$dir" | tr -d '/')
+    nicedirname=$(nicedirname "$dir")
     # Determine the archive type to create
-    if echo "$archives" | grep -E -q "^$hostname-yearly-$year-.+-$nicedirname$"; then
-        if echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month-.+-$nicedirname$"; then
+    if echo "$archives" | grep -E -q "^$hostname-yearly-$year-.+$nicedirname$"; then
+        if echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month-.+$nicedirname$"; then
             # There's a yearly and monthly backup already
             archivetype="daily"
         else
@@ -179,7 +189,7 @@ for dir in $backuptargets; do
         archivetype="yearly"
     fi
     log_verbose "archive-type type=$archivetype"
-    archivename="$hostname-$archivetype-$today-$nicedirname"
+    archivename="$hostname-$archivetype-$today$nicedirname"
     log_verbose "backup-start type=$archivetype dir=/$dir name=$archivename"
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
     # shellcheck disable=SC2086
@@ -202,7 +212,7 @@ prune_backups() {
     backuplevel=$1 max=$2
 
     if [ "$max" -gt 0 ]; then
-        backupslist=$(echo "$archives" | grep -E "$hostname-$backuplevel-.+-$nicedirname$" | sort -rn)
+        backupslist=$(echo "$archives" | grep -E "$hostname-$backuplevel-.+$nicedirname$" | sort -rn)
         numberofbackups=$(echo "$backupslist" | awk 'END{print NR}')
         if [ "$numberofbackups" -gt "$max" ]; then
             log_debug "message=\"More than $max $backuplevel backups, deleting the oldest\""
@@ -223,7 +233,7 @@ prune_backups() {
 
 for dir in $backuptargets; do
     log_debug "message=\"Checking $dir for old backups to delete\""
-    nicedirname=$(echo "$dir" | tr -d '/')
+    nicedirname=$(nicedirname "$dir")
 
     prune_backups yearly  $yearlybackups
     prune_backups monthly $monthlybackups
