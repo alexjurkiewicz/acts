@@ -219,7 +219,7 @@ done
 # Run the post-backup script
 if [ -n "$postbackupscript" ]; then
     if [ -x "$postbackupscript" ]; then
-        log_verbose "run-prebackupscript script=$postbackupscript..."
+        log_verbose "run-postbackupscript script=$postbackupscript..."
         $postbackupscript
     else
         die "acts-error message=\"postbackupscript $postbackupscript is not executable!\""
