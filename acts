@@ -71,6 +71,8 @@ die() {
 # PART 1: Initialisation
 if [ -n "$acts_conf" ]; then
     if [ -f "$acts_conf" ]; then
+        # This file isn't expected to exist--shellcheck can ignore it
+        # shellcheck source=/dev/null
         . "$acts_conf"
         log_debug "load-config source=$acts_conf"
     else
