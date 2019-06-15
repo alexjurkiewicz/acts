@@ -1,4 +1,4 @@
-ACTS 1.4b1
+ACTS 1.4b2
 ==========
 
 Another Calendar-based Tarsnap Script.
