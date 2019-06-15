@@ -175,30 +175,48 @@ for dir in $backuptargets; do
     log_debug "message=\"Starting backup of $dir\""
     archive_starttime=$(date +%s)
     nicedirname=$(nicedirname "$dir")
-    # Determine the archive type to create
-    if echo "$archives" | grep -E -q "^$hostname-yearly-$year-.+$nicedirname$"; then
-        if echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month-.+$nicedirname$"; then
-            # There's a yearly and monthly backup already
-            archivetype="daily"
-        else
-            # There was a yearly but no monthly backup
-            archivetype="monthly"
-        fi
-    else
-        # There's no yearly backup
-        archivetype="yearly"
-    fi
-    log_verbose "archive-type type=$archivetype"
-    archivename="$hostname-$archivetype-$today$nicedirname"
-    log_verbose "backup-start type=$archivetype dir=/$dir name=$archivename"
+
+    dailyarchive="$hostname-daily-$today$nicedirname"
+    monthlyarchive="$hostname-monthly-$today$nicedirname"
+    yearlyarchive="$hostname-yearly-$today$nicedirname"
+
+    log_verbose "backup-start  type=daily dir=/$dir name=$dailyarchive"
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
     # shellcheck disable=SC2086
-    if ! output="$($tarsnap -c -f "$archivename" -C / $tarsnapbackupoptions "$dir" 2>&1)"; then
-        log_message "backup-error type=$archivetype dir=/$dir output=\"$(echo $output | tr '\n' " ")\""
+    if ! output="$($tarsnap -c -f "$dailyarchive" -C / $tarsnapbackupoptions "$dir" 2>&1)"; then
+        log_message "backup-error type=daily dir=/$dir output=\"$(echo $output | tr '\n' " ")\""
         backuprc=1
     fi
     archive_endtime=$(date +%s)
-    log_verbose "backup-finish type=$archivetype dir=/$dir duration=$((archive_endtime - archive_starttime))s"
+    log_verbose "backup-finish type=daily dir=/$dir duration=$((archive_endtime - archive_starttime))s"
+
+    # Determine whether other backup levels need to be created too
+    # If so, copy them from $dailyarchive
+    if ! echo "$archives" | grep -E -q "^$hostname-yearly-$year-.+$nicedirname$"; then
+        # No yearly backup
+        log_debug "message=\"Copying daily archive to yearly archive\""
+        archive_starttime=$(date +%s)
+        # shellcheck disable=SC2086
+        if ! output="$(tarsnap -c -f "$yearlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+            log_message "copy-error  type=yearly output=\"$(echo $output | tr '\n' " ")\""
+            backuprc=1
+        fi
+        archive_endtime=$(date +%s)
+        log_verbose "copy-finish type=yearly dir=/$dir name=$yearlyarchive duration=$((archive_endtime - archive_starttime))s"
+    fi
+
+    if ! echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month-.+$nicedirname$"; then
+        # No monthly backup
+        log_debug "message=\"Copying daily archive to monthly archive\""
+        archive_starttime=$(date +%s)
+        # shellcheck disable=SC2086
+        if ! output="$(tarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+            log_message "copy-error  type=monthly output=\"$(echo $output | tr '\n' " ")\""
+            backuprc=1
+        fi
+        archive_endtime=$(date +%s)
+        log_verbose "copy-finish type=monthly dir=/$dir name=$monthlyarchive duration=$((archive_endtime - archive_starttime))s"
+    fi
 done
 # Update the archive listing
 archives=$($tarsnap --list-archives | sort -n)
@@ -213,7 +231,7 @@ prune_backups() {
 
     if [ "$max" -gt 0 ]; then
         backupslist=$(echo "$archives" | grep -E "$hostname-$backuplevel-.+$nicedirname$" | sort -rn)
-        numberofbackups=$(echo "$backupslist" | awk 'END{print NR}')
+        numberofbackups=$(printf '%s' "$backupslist" | awk 'END{print NR}')
         if [ "$numberofbackups" -gt "$max" ]; then
             log_debug "message=\"More than $max $backuplevel backups, deleting the oldest\""
             echo "$backupslist" | tail -n +"$(( max+1 ))" | while read -r archiveprefixtodel; do
@@ -224,7 +242,7 @@ prune_backups() {
                 done
             done
         else
-            log_debug "message=\"Found $numberofbackups $backuplevel backups, not deleting\""
+            log_debug "message=\"Found $numberofbackups $backuplevel backups; not deleting any\""
         fi
     else
         log_debug "message=\"Keeping all $backuplevel backups indefinitely; not deleting any\""
