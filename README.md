@@ -55,8 +55,6 @@ TODO
 
 -   Add per-directory excludes handling. (For now, add global excludes
     in your `tarsnap.conf` or `.tarsnaprc` file.)
--   Add some backup period configurability. (For now, you can edit the
-    hardcoded values in the script.)
 
 FAQ
 ---
