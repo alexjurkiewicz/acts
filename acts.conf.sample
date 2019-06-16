@@ -1,19 +1,19 @@
 #!/bin/sh
 # acts configuration file
 
+## backuptargets MUST be set before use ##
 # backuptargets
 # Space-separated list of directories to backup, relative to /. This is a required option.
 # Default: unset
-backuptargets="var etc home root"
+#backuptargets="var etc home root"
 
 # tarsnap
 # What command to call for 'tarsnap'.
 # Default: tarsnap
-tarsnap="nice -n19 ionice -c3 tarsnap"
+#tarsnap="nice -n19 ionice -c3 tarsnap"  # Linux
 
 # tarsnapbackupoptions
 # What options to use when backing up.
-# e.g.: --one-file-system --humanize-numbers
 # Note: this variable will be expanded by /bin/sh.
 # Default: unset
 tarsnapbackupoptions="--one-file-system --humanize-numbers"
@@ -58,6 +58,6 @@ verbose=1
 # How many backups of each type to keep
 # For all limits, 0 means keep indefinitely
 # Defaults: 31 daily, 12 monthly, and yearly indefinitely
-# dailybackups=31
-# monthlybackups=12
-# yearlybackups=0
+#dailybackups=31
+#monthlybackups=12
+#yearlybackups=0
