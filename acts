@@ -21,7 +21,7 @@ if [ "$#" = "1" ] && { [ "$1" = "-h" ] || [ "$1" = "--help" ]; }; then
     exit 0
 fi
 
-acts_conf=   # Make sure it's always defined
+acts_conf= # Make sure it's always defined
 if [ "$#" = 2 ] && [ "$1" = "-c" ]; then
     acts_conf=$2
 fi
@@ -116,9 +116,9 @@ else
     die "config-error message=\"invalid \$uselocaltime in acts.conf; valid options are 0 (for UTC) or 1 (for local time).\""
 fi
 
-[ $(( dailybackups )) = "$dailybackups" ]     || die "config-error message=\"Invalid \$dailybackups; must be a number.\""
-[ $(( monthlybackups )) = "$monthlybackups" ] || die "config-error message=\"Invalid \$monthlybackups; must be a number.\""
-[ $(( yearlybackups )) = "$yearlybackups" ]   || die "config-error message=\"Invalid \$yearlybackups; must be a number.\""
+[ $((dailybackups)) = "$dailybackups" ] || die "config-error message=\"Invalid \$dailybackups; must be a number.\""
+[ $((monthlybackups)) = "$monthlybackups" ] || die "config-error message=\"Invalid \$monthlybackups; must be a number.\""
+[ $((yearlybackups)) = "$yearlybackups" ] || die "config-error message=\"Invalid \$yearlybackups; must be a number.\""
 
 # Create the lock. mkdir is atomic test/set, so use that instead of the typical test -f/touch combo
 if [ -d "$lockfile" ]; then
@@ -139,8 +139,8 @@ nicedirname() {
     dirname=$(echo "$1" | tr -d '/')
     # Use printf so that non-POSIX echo(1) doesn't think it's a flag
     case $dirname in
-        '' | '.') echo '';;
-        *)        printf '\-%s' "$dirname";;
+    '' | '.') echo '' ;;
+    *) printf '\-%s' "$dirname" ;;
     esac
 }
 
@@ -234,7 +234,7 @@ prune_backups() {
         numberofbackups=$(printf '%s' "$backupslist" | awk 'END{print NR}')
         if [ "$numberofbackups" -gt "$max" ]; then
             log_debug "message=\"More than $max $backuplevel backups, deleting the oldest\""
-            echo "$backupslist" | tail -n +"$(( max+1 ))" | while read -r archiveprefixtodel; do
+            echo "$backupslist" | tail -n +"$((max + 1))" | while read -r archiveprefixtodel; do
                 log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
                 echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
                     log_debug "message=\"Deleting backup $archivetodel\""
@@ -253,9 +253,9 @@ for dir in $backuptargets; do
     log_debug "message=\"Checking $dir for old backups to delete\""
     nicedirname=$(nicedirname "$dir")
 
-    prune_backups yearly  $yearlybackups
+    prune_backups yearly $yearlybackups
     prune_backups monthly $monthlybackups
-    prune_backups daily   $dailybackups
+    prune_backups daily $dailybackups
 done
 
 # Run the post-backup script

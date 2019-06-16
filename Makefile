@@ -1,4 +1,4 @@
-VERSION = $(shell $(shell pwd)/acts --version | cut -d' ' -f3)
+VERSION = `$${PWD}/acts --version | awk '{print $$3}'`
 
 package: dist/acts_$(VERSION)_all.deb
 
@@ -31,6 +31,13 @@ dist/acts_$(VERSION)_all.deb: dist
 dist:
 	@ mkdir dist
 
+check:
+	type shellcheck > /dev/null && shellcheck -e SC1091 acts
+	type shellcheck > /dev/null && shellcheck -e SC2034 acts.conf.sample
+	type shfmt > /dev/null && shfmt -i 4 -d acts
+	type shfmt > /dev/null && shfmt -i 4 -d acts.conf.sample
+
 .PHONY: \
-	package \
-	clean
+	check \
+	clean \
+	package
