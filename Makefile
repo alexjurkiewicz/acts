@@ -32,10 +32,10 @@ dist:
 	@ mkdir dist
 
 check:
-	type shellcheck > /dev/null && shellcheck -e SC1091 acts
-	type shellcheck > /dev/null && shellcheck -e SC2034 acts.conf.sample
-	type shfmt > /dev/null && shfmt -i 4 -d acts
-	type shfmt > /dev/null && shfmt -i 4 -d acts.conf.sample
+	if command -v shellcheck >/dev/null; then shellcheck -e SC1091 acts; fi
+	if command -v shellcheck >/dev/null; then shellcheck -e SC2034 acts.conf.sample; fi
+	if command -v shfmt >/dev/null; then shfmt -i 4 -d acts; fi
+	if command -v shfmt >/dev/null; then shfmt -i 4 -d acts.conf.sample; fi
 
 .PHONY: \
 	check \
