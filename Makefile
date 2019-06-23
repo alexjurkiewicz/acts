@@ -1,4 +1,4 @@
-VERSION = `$${PWD}/acts --version | awk '{print $$3}'`
+VERSION!= $${PWD}/acts --version | awk '{print $$3}'
 
 package: dist/acts_$(VERSION)_all.deb
 
