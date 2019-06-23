@@ -59,6 +59,20 @@ FAQ
 
 * **How do I back up directories with spaces?** Sorry, acts doesn't support this. I suggest you create a symlink to the target directory which doesn't have spaces in its path, and add `-L` to `tarsnapbackupoptions` in your configuration file.
 
+* **How do I see the `tarsnap` output?** Basically, you don't. `acts` only
+shows `tarsnap` output if tarsnap failed. To see what acts is doing,
+you can set `verbose=1` in your `acts.conf`. You can get some good `tarsnap`
+info, including exactly how much new data this backup consumed, with
+a **pre**backupscript. Be sure to set `prebackupscript` in `acts.conf`
+to wherever you put this script:
+
+```sh
+#!/bin/sh
+
+. /etc/acts.conf     # Or wherever your acts.conf lives
+tarsnap --dry-run --quiet --print-stats --humanize-numbers -C / -c $backuptargets 2>&1
+```
+
 License
 -------
 
