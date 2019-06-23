@@ -13,7 +13,7 @@ design goals:
 -   Calendar-based backup schedule
 -   Portable, small, code footprint.
 
-One Tarsnap archive is created per-target per-run. By default,
+One daily Tarsnap archive is created per-target per-run. By default,
 31 daily and 12 monthly backups are kept, and yearly backups are
 kept indefinitely.
 
@@ -36,11 +36,9 @@ Notes on behaviour:
 -   `acts` creates archives of the form
     `<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-target`.
 -   Archives are created using the following logic:
-    -   If no yearly backup for the current year exists, create a yearly
-        backup.
-    -   If no monthly backup for the current month exists, create a
-        monthly backup.
-    -   Otherwise, create a daily backup.
+    -   Daily archives are created every time acts is run.
+    -   Monthly/yearly archives are copied from the most recent
+        daily archive if they don't exist.
 -   Archives are deleted using the following logic by default:
     -   If any backups failed, delete nothing.
     -   Keep the most recent 31 daily backups, and delete any older
