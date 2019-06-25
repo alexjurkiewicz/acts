@@ -116,9 +116,9 @@ else
     die "config-error message=\"invalid \$uselocaltime in acts.conf; valid options are 0 (for UTC) or 1 (for local time).\""
 fi
 
-[ $((dailybackups)) = "$dailybackups" ] || die "config-error message=\"Invalid \$dailybackups; must be a number.\""
+[ $((dailybackups)) = "$dailybackups" ]     || die "config-error message=\"Invalid \$dailybackups; must be a number.\""
 [ $((monthlybackups)) = "$monthlybackups" ] || die "config-error message=\"Invalid \$monthlybackups; must be a number.\""
-[ $((yearlybackups)) = "$yearlybackups" ] || die "config-error message=\"Invalid \$yearlybackups; must be a number.\""
+[ $((yearlybackups)) = "$yearlybackups" ]   || die "config-error message=\"Invalid \$yearlybackups; must be a number.\""
 
 # Create the lock. mkdir is atomic test/set, so use that instead of the typical test -f/touch combo
 if [ -d "$lockfile" ]; then
@@ -155,7 +155,7 @@ archives=$(echo "$archives_unsorted" | sort -n)
 # When is now?
 # Instead of re-running date, be paranoid the day was microseconds away from ending
 today=$(date $utc "+%Y-%m-%d_%H:%M:%S")
-year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
+year=$( echo "$today" | cut -d_ -f1 | cut -d- -f1)
 month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
 # day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
 
@@ -253,9 +253,9 @@ for dir in $backuptargets; do
     log_debug "message=\"Checking $dir for old backups to delete\""
     nicedirname=$(nicedirname "$dir")
 
-    prune_backups yearly $yearlybackups
+    prune_backups yearly  $yearlybackups
     prune_backups monthly $monthlybackups
-    prune_backups daily $dailybackups
+    prune_backups daily   $dailybackups
 done
 
 # Run the post-backup script

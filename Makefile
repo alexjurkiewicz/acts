@@ -34,8 +34,8 @@ dist:
 check:
 	if command -v shellcheck >/dev/null; then shellcheck -e SC1091 acts; fi
 	if command -v shellcheck >/dev/null; then shellcheck -e SC2034 acts.conf.sample; fi
-	if command -v shfmt >/dev/null; then shfmt -i 4 -d acts; fi
-	if command -v shfmt >/dev/null; then shfmt -i 4 -d acts.conf.sample; fi
+	if command -v shfmt >/dev/null; then shfmt -i 4 -d -kp acts; fi
+	if command -v shfmt >/dev/null; then shfmt -i 4 -d -kp acts.conf.sample; fi
 
 .PHONY: \
 	check \
