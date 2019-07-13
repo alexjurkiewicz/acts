@@ -1,4 +1,4 @@
-ACTS 1.4b1
+ACTS 1.4.0
 ==========
 
 Another Calendar-based Tarsnap Script.
@@ -13,8 +13,9 @@ design goals:
 -   Calendar-based backup schedule
 -   Portable, small, code footprint.
 
-One Tarsnap archive is created per-target per-run. 31 daily, 12 monthly,
-and indefinite yearly backups are kept.
+One daily Tarsnap archive is created per-target per-run. By default,
+31 daily and 12 monthly backups are kept, and yearly backups are
+kept indefinitely.
 
 Download
 --------
@@ -35,12 +36,10 @@ Notes on behaviour:
 -   `acts` creates archives of the form
     `<hostname>-<period>-yyyy-mm-dd_HH:MM:SS-target`.
 -   Archives are created using the following logic:
-    -   If no yearly backup for the current year exists, create a yearly
-        backup.
-    -   If no monthly backup for the current month exists, create a
-        monthly backup.
-    -   Otherwise, create a daily backup.
--   Archives are deleted using the following logic:
+    -   Daily archives are created every time acts is run.
+    -   Monthly/yearly archives are copied from the most recent
+        daily archive if they don't exist.
+-   Archives are deleted using the following logic by default:
     -   If any backups failed, delete nothing.
     -   Keep the most recent 31 daily backups, and delete any older
         ones.
@@ -54,13 +53,25 @@ TODO
 
 -   Add per-directory excludes handling. (For now, add global excludes
     in your `tarsnap.conf` or `.tarsnaprc` file.)
--   Add some backup period configurability. (For now, you can edit the
-    hardcoded values in the script.)
 
 FAQ
 ---
 
 * **How do I back up directories with spaces?** Sorry, acts doesn't support this. I suggest you create a symlink to the target directory which doesn't have spaces in its path, and add `-L` to `tarsnapbackupoptions` in your configuration file.
+
+* **How do I see the `tarsnap` output?** Basically, you don't. `acts` only
+shows `tarsnap` output if tarsnap failed. To see what acts is doing,
+you can set `verbose=1` in your `acts.conf`. You can get some good `tarsnap`
+info, including exactly how much new data this backup consumed, with
+a **pre**backupscript. Be sure to set `prebackupscript` in `acts.conf`
+to wherever you put this script:
+
+```sh
+#!/bin/sh
+
+. /etc/acts.conf     # Or wherever your acts.conf lives
+tarsnap --dry-run --quiet --print-stats --humanize-numbers -C / -c $backuptargets 2>&1
+```
 
 License
 -------

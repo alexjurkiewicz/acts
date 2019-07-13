@@ -5,7 +5,7 @@ set -u
 # Exit if a pipeline exits non-zero
 set -e
 
-VERSION="1.4b1"
+VERSION="1.4.0"
 
 if [ "$#" = "1" ] && [ "$1" = "--version" ]; then
     echo "acts version $VERSION"
@@ -13,11 +13,17 @@ if [ "$#" = "1" ] && [ "$1" = "--version" ]; then
 fi
 
 if [ "$#" = "1" ] && { [ "$1" = "-h" ] || [ "$1" = "--help" ]; }; then
-    echo "usage: acts"
+    echo "usage: acts [-c /path/to/acts.conf]"
     echo
-    echo "Configuration should be in /etc/acts.conf or /usr/local/etc/acts.conf"
+    echo "Configuration should be in /etc/acts.conf or /usr/local/etc/acts.conf,"
+    echo "or given after the -c option"
     echo "See https://github.com/alexjurkiewicz/acts for more information."
     exit 0
+fi
+
+acts_conf= # Make sure it's always defined
+if [ "$#" = 2 ] && [ "$1" = "-c" ]; then
+    acts_conf=$2
 fi
 
 starttime=$(date +%s)
@@ -63,10 +69,15 @@ die() {
 }
 
 # PART 1: Initialisation
-if [ -f acts.conf ]; then
-    . ./acts.conf
-    # Loading from CWD is for development/debugging, so be noisy when we do
-    log_message "load-config source=$(pwd)/acts.conf message=\"Loading config from CWD is intended for development use only\""
+if [ -n "$acts_conf" ]; then
+    if [ -f "$acts_conf" ]; then
+        # This file isn't expected to exist--shellcheck can ignore it
+        # shellcheck source=/dev/null
+        . "$acts_conf"
+        log_debug "load-config source=$acts_conf"
+    else
+        die "load-config source=$acts_conf message=\"User-specified config not found\""
+    fi
 elif [ -f /etc/acts.conf ]; then
     . /etc/acts.conf
     log_debug "load-config source=/etc/acts.conf"
@@ -74,7 +85,7 @@ elif [ -f /usr/local/etc/acts.conf ]; then
     . /usr/local/etc/acts.conf
     log_debug "load-config source=/usr/local/etc/acts.conf"
 else
-    die "load-config-error message=\"No $(pwd)/acts.conf, /etc/acts.conf or /usr/local/etc/acts.conf\""
+    die "load-config-error message=\"No /etc/acts.conf, /usr/local/etc/acts.conf, or -c option\""
 fi
 # Use default values if anything is not set
 verbose="${verbose=0}"
@@ -86,6 +97,9 @@ postbackupscript="${postbackupscript=}"
 tarsnap="${tarsnap:=tarsnap}"
 tarsnapbackupoptions="${tarsnapbackupoptions=}"
 lockfile="${lockfile=/var/run/acts}"
+dailybackups="${dailybackups:=31}"
+monthlybackups="${monthlybackups:=12}"
+yearlybackups="${yearlybackups:=0}"
 LANG="${LANG=en_US.UTF-8}"
 export LANG
 
@@ -102,6 +116,10 @@ else
     die "config-error message=\"invalid \$uselocaltime in acts.conf; valid options are 0 (for UTC) or 1 (for local time).\""
 fi
 
+[ $((dailybackups)) = "$dailybackups" ]     || die "config-error message=\"Invalid \$dailybackups; must be a number.\""
+[ $((monthlybackups)) = "$monthlybackups" ] || die "config-error message=\"Invalid \$monthlybackups; must be a number.\""
+[ $((yearlybackups)) = "$yearlybackups" ]   || die "config-error message=\"Invalid \$yearlybackups; must be a number.\""
+
 # Create the lock. mkdir is atomic test/set, so use that instead of the typical test -f/touch combo
 if [ -d "$lockfile" ]; then
     die "acts-error message=\"$lockfile exists referencing PID $(cat "$lockfile/pid" 2>/dev/null || echo "<none>"). Hint: If acts is not already running, rm -rf $lockfile.\""
@@ -116,6 +134,16 @@ fi
 
 trap 'trap - INT TERM EXIT ; echo Exiting unexpectedly. >&2 ; rm -f "$lockfile/pid"; rmdir "$lockfile" ; exit 1' INT TERM EXIT
 
+# nicedirname:  /foo/bar -> '-foobar', / -> ''
+nicedirname() {
+    dirname=$(echo "$1" | tr -d '/')
+    # Use printf so that non-POSIX echo(1) doesn't think it's a flag
+    case $dirname in
+    '' | '.') echo '' ;;
+    *) printf '\-%s' "$dirname" ;;
+    esac
+}
+
 # PART 2: Preparation
 log_debug "Listing tarsnap archives"
 if ! archives_unsorted=$($tarsnap --list-archives); then
@@ -127,7 +155,7 @@ archives=$(echo "$archives_unsorted" | sort -n)
 # When is now?
 # Instead of re-running date, be paranoid the day was microseconds away from ending
 today=$(date $utc "+%Y-%m-%d_%H:%M:%S")
-year=$(echo "$today" | cut -d_ -f1 | cut -d- -f1)
+year=$( echo "$today" | cut -d_ -f1 | cut -d- -f1)
 month=$(echo "$today" | cut -d_ -f1 | cut -d- -f2)
 # day=$(echo "$today" | cut -d_ -f1 | cut -d- -f3) # unused
 
@@ -146,31 +174,49 @@ backuprc=0 # Notice any failed backups
 for dir in $backuptargets; do
     log_debug "message=\"Starting backup of $dir\""
     archive_starttime=$(date +%s)
-    nicedirname=$(echo "$dir" | tr -d '/')
-    # Determine the archive type to create
-    if echo "$archives" | grep -E -q "^$hostname-yearly-$year-.+-$nicedirname$"; then
-        if echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month-.+-$nicedirname$"; then
-            # There's a yearly and monthly backup already
-            archivetype="daily"
-        else
-            # There was a yearly but no monthly backup
-            archivetype="monthly"
-        fi
-    else
-        # There's no yearly backup
-        archivetype="yearly"
-    fi
-    log_verbose "archive-type type=$archivetype"
-    archivename="$hostname-$archivetype-$today-$nicedirname"
-    log_verbose "backup-start type=$archivetype dir=/$dir name=$archivename"
+    nicedirname=$(nicedirname "$dir")
+
+    dailyarchive="$hostname-daily-$today$nicedirname"
+    monthlyarchive="$hostname-monthly-$today$nicedirname"
+    yearlyarchive="$hostname-yearly-$today$nicedirname"
+
+    log_verbose "backup-start  type=daily dir=/$dir name=$dailyarchive"
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
     # shellcheck disable=SC2086
-    if ! output="$($tarsnap -c -f "$archivename" -C / $tarsnapbackupoptions "$dir" 2>&1)"; then
-        log_message "backup-error type=$archivetype dir=/$dir output=\"$(echo $output | tr '\n' " ")\""
+    if ! output="$($tarsnap -c -f "$dailyarchive" -C / $tarsnapbackupoptions "$dir" 2>&1)"; then
+        log_message "backup-error type=daily dir=/$dir output=\"$(echo $output | tr '\n' " ")\""
         backuprc=1
     fi
     archive_endtime=$(date +%s)
-    log_verbose "backup-finish type=$archivetype dir=/$dir duration=$((archive_endtime - archive_starttime))s"
+    log_verbose "backup-finish type=daily dir=/$dir duration=$((archive_endtime - archive_starttime))s"
+
+    # Determine whether other backup levels need to be created too
+    # If so, copy them from $dailyarchive
+    if ! echo "$archives" | grep -E -q "^$hostname-yearly-$year-.+$nicedirname$"; then
+        # No yearly backup
+        log_debug "message=\"Copying daily archive to yearly archive\""
+        archive_starttime=$(date +%s)
+        # shellcheck disable=SC2086
+        if ! output="$(tarsnap -c -f "$yearlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+            log_message "copy-error  type=yearly output=\"$(echo $output | tr '\n' " ")\""
+            backuprc=1
+        fi
+        archive_endtime=$(date +%s)
+        log_verbose "copy-finish type=yearly dir=/$dir name=$yearlyarchive duration=$((archive_endtime - archive_starttime))s"
+    fi
+
+    if ! echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month-.+$nicedirname$"; then
+        # No monthly backup
+        log_debug "message=\"Copying daily archive to monthly archive\""
+        archive_starttime=$(date +%s)
+        # shellcheck disable=SC2086
+        if ! output="$(tarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+            log_message "copy-error  type=monthly output=\"$(echo $output | tr '\n' " ")\""
+            backuprc=1
+        fi
+        archive_endtime=$(date +%s)
+        log_verbose "copy-finish type=monthly dir=/$dir name=$monthlyarchive duration=$((archive_endtime - archive_starttime))s"
+    fi
 done
 # Update the archive listing
 archives=$($tarsnap --list-archives | sort -n)
@@ -180,46 +226,42 @@ if [ "$backuprc" != "0" ]; then
     die "acts-tarsnap-error One of the backups failed -- not deleting old backups"
 fi
 
+prune_backups() {
+    backuplevel=$1 max=$2
+
+    if [ "$max" -gt 0 ]; then
+        backupslist=$(echo "$archives" | grep -E "$hostname-$backuplevel-.+$nicedirname$" | sort -rn)
+        numberofbackups=$(printf '%s' "$backupslist" | awk 'END{print NR}')
+        if [ "$numberofbackups" -gt "$max" ]; then
+            log_debug "message=\"More than $max $backuplevel backups, deleting the oldest\""
+            echo "$backupslist" | tail -n +"$((max + 1))" | while read -r archiveprefixtodel; do
+                log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
+                echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
+                    log_debug "message=\"Deleting backup $archivetodel\""
+                    $tarsnap -d -f "$archivetodel"
+                done
+            done
+        else
+            log_debug "message=\"Found $numberofbackups $backuplevel backups; not deleting any\""
+        fi
+    else
+        log_debug "message=\"Keeping all $backuplevel backups indefinitely; not deleting any\""
+    fi
+}
+
 for dir in $backuptargets; do
     log_debug "message=\"Checking $dir for old backups to delete\""
-    nicedirname=$(echo "$dir" | tr -d '/')
-    # We don't delete any yearly backups
+    nicedirname=$(nicedirname "$dir")
 
-    # We keep 12 monthly backups
-    monthlybackups=$(echo "$archives" | grep "$hostname-monthly-.+-$nicedirname$" | sort -rn)
-    if [ "$(echo "$monthlybackups" | wc -l)" -gt 12 ]; then
-        log_debug 'message="More than 12 monthly backups, deleting the oldest"'
-        echo "$monthlybackups" | tail -n +13 | while read -r archiveprefixtodel; do
-            log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
-            echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
-                log_debug "message=\"Deleting backup $archivetodel\""
-                $tarsnap -d -f "$archivetodel"
-            done
-        done
-    else
-        log_debug "message=\"Found $(echo "$monthlybackups" | wc -l) monthly backups, not deleting\""
-    fi
-
-    # We keep 31 daily backups
-    dailybackups=$(echo "$archives" | grep "$hostname-daily-.+-$nicedirname$" | sort -rn)
-    if [ "$(echo "$dailybackups" | wc -l)" -gt 31 ]; then
-        log_debug "message=\"More than 30 daily backups, deleting the oldest\""
-        echo "$dailybackups" | tail -n +32 | while read -r archiveprefixtodel; do
-            log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
-            echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
-                log_debug "message=\"Deleting backup $archivetodel\""
-                $tarsnap -d -f "$archivetodel"
-            done
-        done
-    else
-        log_debug "message=\"Found $(echo "$dailybackups" | wc -l) daily backups, not deleting any\""
-    fi
+    prune_backups yearly  $yearlybackups
+    prune_backups monthly $monthlybackups
+    prune_backups daily   $dailybackups
 done
 
 # Run the post-backup script
 if [ -n "$postbackupscript" ]; then
     if [ -x "$postbackupscript" ]; then
-        log_verbose "run-prebackupscript script=$postbackupscript..."
+        log_verbose "run-postbackupscript script=$postbackupscript..."
         $postbackupscript
     else
         die "acts-error message=\"postbackupscript $postbackupscript is not executable!\""
