@@ -238,7 +238,9 @@ prune_backups() {
                 log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
                 echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
                     log_debug "message=\"Deleting backup $archivetodel\""
-                    $tarsnap -d -f "$archivetodel"
+                    if ! output="$($tarsnap -d -f "$archivetodel" 2>&1)"; then
+                        log_message "delete-error type=$backuplevel output=\"$(echo $output | tr '\n' " ")\""
+                    fi
                 done
             done
         else
