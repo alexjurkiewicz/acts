@@ -140,7 +140,7 @@ nicedirname() {
     # Use printf so that non-POSIX echo(1) doesn't think it's a flag
     case $dirname in
     '' | '.') echo '' ;;
-    *) printf '\-%s' "$dirname" ;;
+    *) printf '%s%s' '-' "$dirname" ;;
     esac
 }
 
