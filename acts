@@ -197,7 +197,7 @@ for dir in $backuptargets; do
         log_debug "message=\"Copying daily archive to yearly archive\""
         archive_starttime=$(date +%s)
         # shellcheck disable=SC2086
-        if ! output="$(tarsnap -c -f "$yearlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+        if ! output="$($tarsnap -c -f "$yearlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
             log_message "copy-error  type=yearly output=\"$(echo $output | tr '\n' " ")\""
             backuprc=1
         fi
@@ -210,7 +210,7 @@ for dir in $backuptargets; do
         log_debug "message=\"Copying daily archive to monthly archive\""
         archive_starttime=$(date +%s)
         # shellcheck disable=SC2086
-        if ! output="$(tarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+        if ! output="$($tarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
             log_message "copy-error  type=monthly output=\"$(echo $output | tr '\n' " ")\""
             backuprc=1
         fi
