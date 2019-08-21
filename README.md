@@ -73,12 +73,7 @@ to wherever you put this script:
 tarsnap --dry-run --quiet --print-stats --humanize-numbers -C / -c $backuptargets 2>&1
 ```
 
-License
--------
-
-This is free and unencumbered software released into the public domain.
-
 Help
 ----
 
-Open a Github issue, or you can email me (<alex@jurkiewi.cz>).
+Open a [Github issue](https://github.com/alexjurkiewicz/acts/issues).
