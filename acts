@@ -165,7 +165,7 @@ prettyprint() {
 }
 
 # PART 2: Preparation
-log_debug "Listing tarsnap archives"
+log_debug "Listing tarsnap archives before creating backups"
 if ! archives_unsorted=$($tarsnap --list-archives); then
     die "acts-tarsnap-error message=\"Couldn't get list of existing archives (Hint: is Tarsnap configured correctly?)\""
     exit 1
@@ -216,7 +216,7 @@ for dir in $backuptargets; do
     # If so, copy them from $dailyarchive
     if ! echo "$archives" | grep -E -q "^$hostname-yearly-$year-.+$nicedirname$"; then
         # No yearly backup
-        log_debug "message=\"Copying daily archive to yearly archive\""
+        log_debug "message=\"Copying $logdirname daily archive to yearly archive\""
         archive_starttime=$(date +%s)
         # shellcheck disable=SC2086
         if ! output="$($tarsnap -c -f "$yearlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
@@ -230,7 +230,7 @@ for dir in $backuptargets; do
 
     if ! echo "$archives" | grep -E -q "^$hostname-monthly-$year-$month-.+$nicedirname$"; then
         # No monthly backup
-        log_debug "message=\"Copying daily archive to monthly archive\""
+        log_debug "message=\"Copying $logdirname daily archive to monthly archive\""
         archive_starttime=$(date +%s)
         # shellcheck disable=SC2086
         if ! output="$($tarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
@@ -243,7 +243,7 @@ for dir in $backuptargets; do
     fi
 done
 # Update the archive listing
-log_debug "Listing tarsnap archives"
+log_debug "Listing tarsnap archives before deleting old backups"
 archives=$($tarsnap --list-archives | sort -n)
 
 # PART 4: Trim old backups.
