@@ -191,6 +191,7 @@ fi
 
 # PART 3: Backup
 backuprc=0 # Notice any failed backups
+backuplist="" # Maintain list of successfully created archives
 for dir in $backuptargets; do
     log_debug "message=\"Starting backup of $dir\""
     archive_starttime=$(date +%s)
@@ -204,7 +205,9 @@ for dir in $backuptargets; do
     log_verbose "backup-start  type=daily dir=/$dir name=$dailyarchive"
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
     # shellcheck disable=SC2086
-    if ! output="$($tarsnap -c -f "$dailyarchive" -C / $tarsnapbackupoptions "$dir" 2>&1)"; then
+    if output="$($tarsnap -c -f "$dailyarchive" -C / $tarsnapbackupoptions "$dir" 2>&1)"; then
+        backuplist="$backuplist $dailyarchive"
+    else
         log_output=$(prettyprint log_output "$output")
         log_message "backup-error type=daily dir=$logdirname output=\"$log_output\""
         backuprc=1
@@ -219,7 +222,9 @@ for dir in $backuptargets; do
         log_debug "message=\"Copying $logdirname daily archive to yearly archive\""
         archive_starttime=$(date +%s)
         # shellcheck disable=SC2086
-        if ! output="$($tarsnap -c -f "$yearlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+        if output="$($tarsnap -c -f "$yearlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+            backuplist="$backuplist $yearlyarchive"
+        else
             log_output=$(prettyprint log_output "$output")
             log_message "copy-error  type=yearly output=\"$log_output\""
             backuprc=1
@@ -233,7 +238,9 @@ for dir in $backuptargets; do
         log_debug "message=\"Copying $logdirname daily archive to monthly archive\""
         archive_starttime=$(date +%s)
         # shellcheck disable=SC2086
-        if ! output="$($tarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+        if output="$($tarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+            backuplist="$backuplist $yearlyarchive"
+        else
             log_output=$(prettyprint log_output "$output")
             log_message "copy-error  type=monthly output=\"$log_output\""
             backuprc=1
@@ -290,7 +297,8 @@ done
 if [ -n "$postbackupscript" ]; then
     if [ -x "$postbackupscript" ]; then
         log_verbose "run-postbackupscript script=$postbackupscript..."
-        $postbackupscript
+        # shellcheck disable=SC2086
+        $postbackupscript $backuplist
     else
         die "acts-error message=\"postbackupscript $postbackupscript is not executable!\""
     fi
