@@ -9,11 +9,13 @@
 
 # tarsnap
 # What command to call for 'tarsnap'.
+# Anything that should be used every time (like --configfile)
+# should go here.
 # Default: tarsnap
 #tarsnap="nice -n19 ionice -c3 tarsnap"  # Linux
 
 # tarsnapbackupoptions
-# What options to use when backing up.
+# What options to use ONLY when backing up.
 # Note: this variable will be expanded by /bin/sh.
 # Default: unset
 tarsnapbackupoptions="--one-file-system --humanize-numbers"
