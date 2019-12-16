@@ -100,6 +100,7 @@ lockfile="${lockfile=/var/run/acts}"
 dailybackups="${dailybackups:=31}"
 monthlybackups="${monthlybackups:=12}"
 yearlybackups="${yearlybackups:=0}"
+type calltarsnap >/dev/null 2>&1 || calltarsnap() { $tarsnap "$@"; }
 LANG="${LANG=en_US.UTF-8}"
 export LANG
 
@@ -166,7 +167,7 @@ prettyprint() {
 
 # PART 2: Preparation
 log_debug "Listing tarsnap archives before creating backups"
-if ! archives_unsorted=$($tarsnap --list-archives); then
+if ! archives_unsorted=$(calltarsnap --list-archives); then
     die "acts-tarsnap-error message=\"Couldn't get list of existing archives (Hint: is Tarsnap configured correctly?)\""
     exit 1
 fi
@@ -205,7 +206,7 @@ for dir in $backuptargets; do
     log_verbose "backup-start  type=daily dir=/$dir name=$dailyarchive"
     # Uncontrolled expansion is bad, but we have little choice. See https://github.com/koalaman/shellcheck/wiki/Sc2086
     # shellcheck disable=SC2086
-    if output="$($tarsnap -c -f "$dailyarchive" -C / $tarsnapbackupoptions "$dir" 2>&1)"; then
+    if output="$(calltarsnap -c -f "$dailyarchive" -C / $tarsnapbackupoptions "$dir" 2>&1)"; then
         backuplist="$backuplist $dailyarchive"
     else
         log_output=$(prettyprint log_output "$output")
@@ -222,7 +223,7 @@ for dir in $backuptargets; do
         log_debug "message=\"Copying $logdirname daily archive to yearly archive\""
         archive_starttime=$(date +%s)
         # shellcheck disable=SC2086
-        if output="$($tarsnap -c -f "$yearlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+        if output="$(calltarsnap -c -f "$yearlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
             backuplist="$backuplist $yearlyarchive"
         else
             log_output=$(prettyprint log_output "$output")
@@ -238,7 +239,7 @@ for dir in $backuptargets; do
         log_debug "message=\"Copying $logdirname daily archive to monthly archive\""
         archive_starttime=$(date +%s)
         # shellcheck disable=SC2086
-        if output="$($tarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
+        if output="$(calltarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
             backuplist="$backuplist $yearlyarchive"
         else
             log_output=$(prettyprint log_output "$output")
@@ -251,7 +252,7 @@ for dir in $backuptargets; do
 done
 # Update the archive listing
 log_debug "Listing tarsnap archives before deleting old backups"
-archives=$($tarsnap --list-archives | sort -n)
+archives=$(calltarsnap --list-archives | sort -n)
 
 # PART 4: Trim old backups.
 if [ "$backuprc" != "0" ]; then
@@ -270,7 +271,7 @@ prune_backups() {
                 log_verbose "message=\"Deleting backup prefix $archiveprefixtodel*\""
                 echo "$archives" | grep -E "^$archiveprefixtodel" | while read -r archivetodel; do
                     log_debug "message=\"Deleting backup $archivetodel\""
-                    if ! output="$($tarsnap -d -f "$archivetodel" 2>&1)"; then
+                    if ! output="$(calltarsnap -d -f "$archivetodel" 2>&1)"; then
                         log_output=$(prettyprint log_output "$output")
                         log_message "delete-error type=$backuplevel output=\"$log_output\""
                     fi
