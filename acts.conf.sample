@@ -20,6 +20,13 @@
 # Default: unset
 tarsnapbackupoptions="--one-file-system --humanize-numbers"
 
+# calltarsnap
+# The function that invokes the tarsnap command.
+# It will receive command line parameters for tarsnap as arguments.
+# Use this when you need to run tarsnap in a pipeline.
+# Default: calltarsnap() { $tarsnap "$@"; }
+#calltarsnap() { pass show tarsnap-passphrase | $tarsnap --passphrase-stdin "$@" }
+
 # verbose
 # Log verbosity. Output is written to stderr.
 # -1 silent. 0=normal. 1=verbose. 2=debug.
