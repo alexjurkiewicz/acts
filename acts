@@ -240,7 +240,7 @@ for dir in $backuptargets; do
         archive_starttime=$(date +%s)
         # shellcheck disable=SC2086
         if output="$(calltarsnap -c -f "$monthlyarchive" $tarsnapbackupoptions "@@$dailyarchive" 2>&1)"; then
-            backuplist="$backuplist $yearlyarchive"
+            backuplist="$backuplist $monthlyarchive"
         else
             log_output=$(prettyprint log_output "$output")
             log_message "copy-error  type=monthly output=\"$log_output\""
