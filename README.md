@@ -73,6 +73,14 @@ to wherever you put this script:
 tarsnap --dry-run --quiet --print-stats --humanize-numbers -C / -c $backuptargets 2>&1
 ```
 
+* **Why does `acts` create a separate backup for each target?** This is the
+original recommended paradigm for `tarsnap`, the idea being that you save
+bandwidth (and therefore money) by only retrieving the pieces you need. If
+`/etc` gets damaged, why download the entirety of `/home`? If this paradigm
+doesn't fit your needs and workflow, there is a fork of `acts`
+called [calsnap](https://github.com/bannmann/calsnap) that produces one
+backup containing all targets.
+
 Help
 ----
 
