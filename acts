@@ -5,7 +5,7 @@ set -u
 # Exit if a pipeline exits non-zero
 set -e
 
-VERSION="1.4.1"
+VERSION="1.4.2"
 
 if [ "$#" = "1" ] && [ "$1" = "--version" ]; then
     echo "acts version $VERSION"
